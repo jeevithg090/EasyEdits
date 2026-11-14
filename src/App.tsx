@@ -101,11 +101,21 @@ const App: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
+    // Re-render at most once per animation frame instead of on every mousemove.
+    let frame = 0;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      if (frame) return;
+      const { clientX, clientY } = e;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setMousePosition({ x: clientX, y: clientY });
+      });
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   const handleCategorySelect = (category: ContentCategory) => {
@@ -255,9 +265,18 @@ const App: React.FC = () => {
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
-                <button className="group px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl font-medium text-lg hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center">
-                  <PlayCircle className="mr-2 w-5 h-5 text-violet-400 group-hover:scale-110 transition-transform" />
-                  Watch Demo
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
+                  }
+                  className="group px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl font-medium text-lg hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center"
+                >
+                  <PlayCircle
+                    className="mr-2 w-5 h-5 text-violet-400 group-hover:scale-110 transition-transform"
+                    aria-hidden="true"
+                  />
+                  How it works
                 </button>
               </div>
 
@@ -313,7 +332,7 @@ const App: React.FC = () => {
           </section>
 
           {/* Categories Grid */}
-          <section id="categories" className="relative py-24">
+          <section id="categories" className="relative py-24 scroll-mt-16">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-950/20 to-transparent" />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
               <div className="text-center mb-16">
@@ -349,7 +368,7 @@ const App: React.FC = () => {
           </section>
 
           {/* How It Works */}
-          <section className="relative py-24">
+          <section id="how-it-works" className="relative py-24 scroll-mt-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-16">
                 <div className="inline-flex items-center px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
