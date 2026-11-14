@@ -39,7 +39,7 @@ export default defineConfig({
         test: {
           name: 'server',
           environment: 'node',
-          include: ['server/**/*.test.{js,cjs}'],
+          include: ['server/**/*.test.js'],
         },
       },
     ],

@@ -41,9 +41,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['server/**/*.test.cjs'],
+    files: ['server/**/*.test.js'],
+    extends: [js.configs.recommended],
     languageOptions: {
-      globals: { ...globals.node, ...globals.vitest },
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: globals.node,
     },
   },
   {
