@@ -8,6 +8,15 @@ const multer = require('multer');
 // Load environment variables from server directory
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+const { loadConfig } = require('./lib/config.cjs');
+const { resolveInside, sanitizeFilename } = require('./lib/paths.cjs');
+const { isYouTubeUrl, isHttpUrl, isPublicHttpUrl, isTimestamp } = require('./lib/validation.cjs');
+const { collectGeminiKeys, KeyPool } = require('./lib/geminiKeys.cjs');
+const { createGeneratorRouter } = require('./routes/generator.cjs');
+
+const config = loadConfig();
+const { GEMINI_TEXT_MODEL, GEMINI_IMAGE_MODEL } = config;
+
 // Gemini API Key pool - reuses the existing keys defined later in file
 // We forward-declare getGeminiApiKey here, actual definition is at line ~3560
 let getGeminiApiKeyFn = null;
@@ -38,10 +47,10 @@ async function callGeminiForNews(prompt, isSearch = false) {
         }
 
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`,
             {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
                 body: JSON.stringify(requestBody)
             }
         );
@@ -91,10 +100,10 @@ async function callGeminiForImageGeneration(prompt) {
         console.log('🎨 Calling Gemini gemini-2.5-flash-image for image generation...');
 
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent`,
             {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
                 body: JSON.stringify(requestBody)
             }
         );
@@ -162,14 +171,21 @@ if (cloudStorage && jobQueue) {
 }
 
 const app = express();
-const PORT = 3005; // Changed to 3005 to avoid conflict with frontend
+const PORT = config.port;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.disable('x-powered-by');
+app.use(cors({ origin: config.corsOrigins === '*' ? true : config.corsOrigins }));
+app.use(express.json({ limit: config.jsonLimit }));
 
 // Downloads directory
 const DOWNLOADS_DIR = path.join(__dirname, 'downloads');
+
+/**
+ * Resolve a client-supplied filename inside DOWNLOADS_DIR.
+ * Returns null for anything that would escape the directory.
+ */
+const resolveDownload = (name) => resolveInside(DOWNLOADS_DIR, name);
 
 // Ensure downloads directory exists
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -212,10 +228,12 @@ app.post('/api/download', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields: url, startTime, endTime' });
     }
 
-    // Validate YouTube URL
-    const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-    if (!youtubePattern.test(url)) {
+    if (!isYouTubeUrl(url)) {
         return res.status(400).json({ error: 'Invalid YouTube URL' });
+    }
+
+    if (!isTimestamp(startTime) || !isTimestamp(endTime)) {
+        return res.status(400).json({ error: 'startTime and endTime must look like 90, 1:30 or 01:02:03' });
     }
 
     // Generate unique filename
@@ -234,6 +252,7 @@ app.post('/api/download', async (req, res) => {
         '--recode-video', 'mp4',  // Re-encode if necessary
         '--download-sections', `*${startTime}-${endTime}`,
         '-o', outputPath,
+        '--', // end of options: never let user input be parsed as a yt-dlp flag
         url
     ];
 
@@ -279,7 +298,7 @@ app.post('/api/download', async (req, res) => {
         res.json({
             success: true,
             filename: downloadedFile,
-            videoPath: `/api/videos/${downloadedFile}`,
+            videoPath: `/api/videos/file/${downloadedFile}`,
             message: 'Video downloaded successfully'
         });
     });
@@ -301,7 +320,7 @@ app.post('/api/autocrop', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: inputVideo' });
     }
 
-    const inputPath = path.join(DOWNLOADS_DIR, inputVideo);
+    const inputPath = resolveDownload(inputVideo);
 
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ error: 'Input video not found' });
@@ -366,7 +385,7 @@ app.post('/api/autocrop', async (req, res) => {
         res.json({
             success: true,
             filename: outputFilename,
-            videoPath: `/api/videos/${outputFilename}`,
+            videoPath: `/api/videos/file/${outputFilename}`,
             message: 'Video autocropped successfully'
         });
     });
@@ -388,6 +407,10 @@ app.post('/api/content-crop', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: videoUrl' });
     }
 
+    if (!isHttpUrl(videoUrl)) {
+        return res.status(400).json({ error: 'videoUrl must be an http(s) URL' });
+    }
+
     const timestamp = Date.now();
     const inputFilename = `content_input_${timestamp}.mp4`;
     const outputFilename = `content_cropped_${timestamp}.mp4`;
@@ -403,6 +426,7 @@ app.post('/api/content-crop', async (req, res) => {
                 '-f', 'best/bestvideo+bestaudio',
                 '--merge-output-format', 'mp4',
                 '-o', inputPath,
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 videoUrl
             ];
 
@@ -442,11 +466,9 @@ app.post('/api/content-crop', async (req, res) => {
             console.log(`Content Crop: Running ${pythonPath} ${args.join(' ')}`);
 
             const python = spawn(pythonPath, args, { cwd: autocropDir });
-            let stdout = '';
             let stderr = '';
 
             python.stdout.on('data', (data) => {
-                stdout += data.toString();
                 console.log(`autocrop: ${data}`);
             });
 
@@ -501,6 +523,10 @@ app.post('/api/fan-edit/download', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: videoUrl' });
     }
 
+    if (!isHttpUrl(videoUrl)) {
+        return res.status(400).json({ error: 'videoUrl must be an http(s) URL' });
+    }
+
     const timestamp = Date.now();
     const outputFilename = `fanedit_${timestamp}.mp4`;
     const outputPath = path.join(DOWNLOADS_DIR, outputFilename);
@@ -513,6 +539,7 @@ app.post('/api/fan-edit/download', async (req, res) => {
                 '-f', 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
                 '--merge-output-format', 'mp4',
                 '-o', outputPath,
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 videoUrl
             ];
 
@@ -565,27 +592,14 @@ app.post('/api/fan-edit/download', async (req, res) => {
     }
 });
 
-// Get list of downloaded videos
-app.get('/api/videos', (req, res) => {
-    try {
-        const files = fs.readdirSync(DOWNLOADS_DIR);
-        const videos = files
-            .filter(f => f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mkv'))
-            .map(f => ({
-                filename: f,
-                path: `/api/videos/${f}`,
-                size: fs.statSync(path.join(DOWNLOADS_DIR, f)).size
-            }));
-        res.json(videos);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to list videos' });
-    }
-});
-
 // Delete a video
 app.delete('/api/videos/:filename', (req, res) => {
     const { filename } = req.params;
-    const filePath = path.join(DOWNLOADS_DIR, filename);
+    const filePath = resolveDownload(filename);
+
+    if (!filePath) {
+        return res.status(400).json({ error: 'Invalid filename' });
+    }
 
     if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'Video not found' });
@@ -603,6 +617,14 @@ app.delete('/api/videos/:filename', (req, res) => {
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Script + concept-art generation for the category Generator page
+app.use('/api/generator', createGeneratorRouter({
+    getApiKey: () => getGeminiApiKey(),
+    rotateApiKey: () => rotateGeminiApiKey(),
+    textModel: GEMINI_TEXT_MODEL,
+    imageModel: GEMINI_IMAGE_MODEL,
+}));
 
 // ============================================
 // CLOUD PROCESSING ENDPOINTS (Google Colab)
@@ -648,10 +670,12 @@ app.post('/api/cloud/upload', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields: url, startTime, endTime' });
     }
 
-    // Validate YouTube URL
-    const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-    if (!youtubePattern.test(url)) {
+    if (!isYouTubeUrl(url)) {
         return res.status(400).json({ error: 'Invalid YouTube URL' });
+    }
+
+    if (!isTimestamp(startTime) || !isTimestamp(endTime)) {
+        return res.status(400).json({ error: 'startTime and endTime must look like 90, 1:30 or 01:02:03' });
     }
 
     try {
@@ -670,6 +694,7 @@ app.post('/api/cloud/upload', async (req, res) => {
                 '--recode-video', 'mp4',  // Re-encode to H.264 if source is AV1
                 '--download-sections', `*${startTime}-${endTime}`,
                 '-o', outputPath,
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 url
             ];
 
@@ -702,7 +727,6 @@ app.post('/api/cloud/upload', async (req, res) => {
 
         // Step 2: Upload to R2
         const localFilePath = path.join(DOWNLOADS_DIR, downloadResult);
-        const r2Key = `inputs/${timestamp}_${downloadResult}`;
 
         const uploadResult = await cloudStorage.uploadVideo(localFilePath, `${timestamp}_${downloadResult}`, 'inputs');
         console.log(`☁️ Cloud upload: Uploaded to R2 as ${uploadResult.key}`);
@@ -1208,12 +1232,20 @@ app.post('/api/download-cloud-video', async (req, res) => {
         return res.status(400).json({ error: 'Missing videoUrl' });
     }
 
-    // Check if it's already a local file path
-    if (!videoUrl.startsWith('http')) {
-        const localPath = path.join(DOWNLOADS_DIR, videoUrl);
-        if (fs.existsSync(localPath)) {
-            return res.json({ success: true, filename: videoUrl, isLocal: true });
-        }
+    // Already a local file (plain filename, or a URL served by this server)?
+    let localCandidate = videoUrl;
+    if (isHttpUrl(videoUrl)) {
+        const { pathname } = new URL(videoUrl);
+        const match = pathname.match(/^\/(?:api\/videos\/file|downloads)\/(.+)$/);
+        localCandidate = match ? decodeURIComponent(match[1]) : null;
+    }
+    const localPath = localCandidate ? resolveDownload(localCandidate) : null;
+    if (localPath && fs.existsSync(localPath)) {
+        return res.json({ success: true, filename: path.relative(DOWNLOADS_DIR, localPath), isLocal: true });
+    }
+
+    if (!isPublicHttpUrl(videoUrl)) {
+        return res.status(400).json({ error: 'videoUrl must be a public http(s) URL or an existing local file' });
     }
 
     console.log(`📥 Downloading cloud video: ${videoUrl.substring(0, 100)}...`);
@@ -1256,13 +1288,13 @@ app.post('/api/create-split-video', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields: videoFilename, images' });
     }
 
-    let inputPath = path.join(DOWNLOADS_DIR, videoFilename);
+    let inputPath = resolveDownload(videoFilename);
 
     // Check if file exists locally
     if (!fs.existsSync(inputPath)) {
         // Maybe the videoFilename is actually a URL - try to extract just the filename
         const cleanFilename = videoFilename.split('?')[0]; // Remove query params
-        inputPath = path.join(DOWNLOADS_DIR, cleanFilename);
+        inputPath = resolveDownload(cleanFilename);
 
         if (!fs.existsSync(inputPath)) {
             // List available videos for debugging
@@ -1317,8 +1349,9 @@ app.post('/api/create-split-video', async (req, res) => {
                 '--zoom', zoomEffect
             ];
 
-            if (captionsPath) {
-                args.push('--captions', captionsPath);
+            const safeCaptionsPath = captionsPath ? resolveDownload(captionsPath) : null;
+            if (safeCaptionsPath && fs.existsSync(safeCaptionsPath)) {
+                args.push('--captions', safeCaptionsPath);
             }
 
             // Use system Python or venv Python
@@ -1329,11 +1362,9 @@ app.post('/api/create-split-video', async (req, res) => {
             console.log(`Executing: ${pythonPath} ${args.join(' ')}`);
 
             const python = spawn(pythonPath, args, { cwd: __dirname });
-            let stdout = '';
             let stderr = '';
 
             python.stdout.on('data', (data) => {
-                stdout += data.toString();
                 console.log(`split_screen: ${data}`);
             });
 
@@ -2097,6 +2128,10 @@ app.post('/api/broll/download', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: url' });
     }
 
+    if (!isPublicHttpUrl(url)) {
+        return res.status(400).json({ error: 'url must be a public http(s) URL' });
+    }
+
     console.log(`🎬 B-Roll: Downloading ${type} from Pexels`);
 
     try {
@@ -2108,7 +2143,7 @@ app.post('/api/broll/download', async (req, res) => {
 
         const buffer = await response.arrayBuffer();
         const extension = type === 'video' ? 'mp4' : 'jpg';
-        const finalFilename = filename || `broll_${Date.now()}.${extension}`;
+        const finalFilename = sanitizeFilename(filename, `broll_${Date.now()}.${extension}`);
         const filePath = path.join(DOWNLOADS_DIR, finalFilename);
 
         fs.writeFileSync(filePath, Buffer.from(buffer));
@@ -2141,7 +2176,6 @@ app.get('/api/broll/search-all', async (req, res) => {
 
     console.log(`🎬 B-Roll: Multi-source search for "${query}" (${type})`);
 
-    const results = [];
     const errors = [];
 
     // Helper function to search Pexels
@@ -2364,6 +2398,10 @@ app.post('/api/music-video/download', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: url' });
     }
 
+    if (!isHttpUrl(url)) {
+        return res.status(400).json({ error: 'url must be an http(s) URL' });
+    }
+
     const timestamp = Date.now();
     const outputFilename = `music_${timestamp}.mp4`;
     const outputPath = path.join(DOWNLOADS_DIR, outputFilename);
@@ -2376,6 +2414,7 @@ app.post('/api/music-video/download', async (req, res) => {
                 '-f', 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
                 '--merge-output-format', 'mp4',
                 '-o', outputPath,
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 url
             ];
 
@@ -2440,7 +2479,7 @@ app.get('/api/music-video/filters', (req, res) => {
 // Apply filter to video (preview or full)
 // Apply filter to video (preview or full) - Supports Timeline!
 app.post('/api/music-video/apply-filter', async (req, res) => {
-    const { videoFilename, filter, timeline, intensity = 1.0 } = req.body;
+    const { videoFilename, filter, timeline } = req.body;
 
     if (!videoFilename) {
         console.error('❌ Missing fields. Received body:', req.body);
@@ -2451,7 +2490,7 @@ app.post('/api/music-video/apply-filter', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields: filter OR timeline' });
     }
 
-    const inputPath = path.join(DOWNLOADS_DIR, videoFilename);
+    const inputPath = resolveDownload(videoFilename);
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ error: 'Input video not found' });
     }
@@ -2593,7 +2632,7 @@ app.post('/api/music-video/process', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: videoFilename' });
     }
 
-    const inputPath = path.join(DOWNLOADS_DIR, videoFilename);
+    const inputPath = resolveDownload(videoFilename);
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ error: 'Input video not found' });
     }
@@ -2671,11 +2710,9 @@ app.post('/api/music-video/process', async (req, res) => {
             console.log(`   Running: ${pythonPath} ${args.join(' ')}`);
 
             const python = spawn(pythonPath, args, { cwd: autocropDir });
-            let stdout = '';
             let stderr = '';
 
             python.stdout.on('data', (data) => {
-                stdout += data.toString();
                 console.log(`   ${data.toString().trim()}`);
             });
 
@@ -2833,7 +2870,7 @@ app.post('/api/music-video/transcribe', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: videoFilename' });
     }
 
-    const inputPath = path.join(DOWNLOADS_DIR, videoFilename);
+    const inputPath = resolveDownload(videoFilename);
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ error: 'Input video not found' });
     }
@@ -2957,7 +2994,7 @@ app.post('/api/music-video/ai-beat-detect', async (req, res) => {
         return res.status(400).json({ error: 'Missing required field: videoFilename' });
     }
 
-    const inputPath = path.join(DOWNLOADS_DIR, videoFilename);
+    const inputPath = resolveDownload(videoFilename);
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ error: 'Input video not found' });
     }
@@ -2985,7 +3022,7 @@ app.post('/api/music-video/ai-beat-detect', async (req, res) => {
 
 // AI Filter Suggestion based on audio mood
 app.post('/api/music-video/ai-suggest-filter', async (req, res) => {
-    const { videoFilename, mood } = req.body;
+    const { mood } = req.body;
 
     // Simple mood-to-filter mapping
     const moodFilters = {
@@ -3164,37 +3201,40 @@ app.get('/api/motivational/quote/:source', async (req, res) => {
 
         switch (source) {
             case 'zen':
-            case 'zenquotes':
-                // ZenQuotes API - free, no key needed
-                const zenResponse = await fetch('https://zenquotes.io/api/random');
-                const zenData = await zenResponse.json();
-                if (zenData && zenData[0]) {
-                    quote = zenData[0].q;
-                    author = zenData[0].a;
-                }
-                break;
+            case 'zenquotes': {
+                    // ZenQuotes API - free, no key needed
+                    const zenResponse = await fetch('https://zenquotes.io/api/random');
+                    const zenData = await zenResponse.json();
+                    if (zenData && zenData[0]) {
+                        quote = zenData[0].q;
+                        author = zenData[0].a;
+                    }
+                    break;
+            }
 
             case 'stoic':
-            case 'stoicism':
-                // Stoic Quotes API
-                const stoicResponse = await fetch('https://stoic-quotes.com/api/quote');
-                const stoicData = await stoicResponse.json();
-                if (stoicData) {
-                    quote = stoicData.text;
-                    author = stoicData.author;
-                }
-                break;
+            case 'stoicism': {
+                    // Stoic Quotes API
+                    const stoicResponse = await fetch('https://stoic-quotes.com/api/quote');
+                    const stoicData = await stoicResponse.json();
+                    if (stoicData) {
+                        quote = stoicData.text;
+                        author = stoicData.author;
+                    }
+                    break;
+            }
 
             case 'affirmation':
-            case 'affirmations':
-                // Affirmations.dev API
-                const affirmResponse = await fetch('https://www.affirmations.dev/');
-                const affirmData = await affirmResponse.json();
-                if (affirmData) {
-                    quote = affirmData.affirmation;
-                    author = 'Daily Affirmation';
-                }
-                break;
+            case 'affirmations': {
+                    // Affirmations.dev API
+                    const affirmResponse = await fetch('https://www.affirmations.dev/');
+                    const affirmData = await affirmResponse.json();
+                    if (affirmData) {
+                        quote = affirmData.affirmation;
+                        author = 'Daily Affirmation';
+                    }
+                    break;
+            }
 
             default:
                 return res.status(400).json({ error: `Unknown source: ${source}` });
@@ -3449,6 +3489,10 @@ app.post('/api/motivational/download-broll', async (req, res) => {
         return res.status(400).json({ error: 'YouTube URL is required' });
     }
 
+    if (!isHttpUrl(url)) {
+        return res.status(400).json({ error: 'url must be an http(s) URL' });
+    }
+
     // Default to 30 second clip if no times specified
     const start = startTime || '0:00';
     const end = endTime || '0:30';
@@ -3470,6 +3514,7 @@ app.post('/api/motivational/download-broll', async (req, res) => {
                 '--download-sections', `*${start}-${end}`,
                 '-o', tempPath,
                 '--no-playlist',
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 url
             ];
 
@@ -3627,21 +3672,19 @@ app.get('/api/motivational/broll-suggestions', (req, res) => {
 // Uses Gemini to suggest YouTube clips based on script
 // ============================================
 
-const GEMINI_API_KEYS = [
-    process.env.GEMINI_API_KEY_1 || '',  // Primary
-    process.env.GEMINI_API_KEY_2 || ''   // Fallback
-];
-let currentGeminiKeyIndex = 0;
+const geminiKeyPool = new KeyPool(collectGeminiKeys());
 
 // Get current API key, rotate on failure
 function getGeminiApiKey() {
-    return GEMINI_API_KEYS[currentGeminiKeyIndex];
+    return geminiKeyPool.current();
 }
 
 function rotateGeminiApiKey() {
-    currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % GEMINI_API_KEYS.length;
-    console.log(`🔑 Rotated to Gemini API key ${currentGeminiKeyIndex + 1}`);
-    return GEMINI_API_KEYS[currentGeminiKeyIndex];
+    const key = geminiKeyPool.rotate();
+    if (geminiKeyPool.size > 1) {
+        console.log(`🔑 Rotated to Gemini API key ${geminiKeyPool.index + 1}/${geminiKeyPool.size}`);
+    }
+    return key;
 }
 
 // Hook up the forward-declared functions for callGeminiForNews
@@ -3650,7 +3693,7 @@ rotateGeminiApiKeyFn = rotateGeminiApiKey;
 
 // Step 1: Get AI-suggested YouTube clips for the script
 app.post('/api/motivational/ai-youtube-suggest', async (req, res) => {
-    const { quote, script, niche } = req.body;
+    const { quote, script } = req.body;
 
     if (!quote && !script) {
         return res.status(400).json({ error: 'Quote or script is required' });
@@ -3690,9 +3733,9 @@ Respond in JSON:
 }`;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${getGeminiApiKey()}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': getGeminiApiKey() },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
@@ -3905,9 +3948,9 @@ Respond ONLY with JSON:
 }`;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${getGeminiApiKey()}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': getGeminiApiKey() },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
@@ -3960,10 +4003,8 @@ Respond ONLY with JSON:
 
             const ytdlp = spawn('yt-dlp', args);
             let stdout = '';
-            let stderr = '';
 
             ytdlp.stdout.on('data', (data) => { stdout += data.toString(); });
-            ytdlp.stderr.on('data', (data) => { stderr += data.toString(); });
 
             ytdlp.on('close', (code) => {
                 if (code !== 0) {
@@ -4091,9 +4132,7 @@ app.post('/api/motivational/ai-youtube-download', async (req, res) => {
                 ];
 
                 const ffmpeg = spawn('ffmpeg', ffmpegArgs);
-                let stderr = '';
 
-                ffmpeg.stderr.on('data', (data) => { stderr += data.toString(); });
 
                 ffmpeg.on('close', (code) => {
                     // Remove original
@@ -4140,7 +4179,7 @@ app.post('/api/motivational/ai-youtube-download', async (req, res) => {
 app.post('/api/motivational/ai-youtube-assemble', async (req, res) => {
     const { clips, audioFilename, script, captionStyle } = req.body;
 
-    if (!clips || clips.length === 0) {
+    if (!Array.isArray(clips) || clips.length === 0) {
         return res.status(400).json({ error: 'Clips array is required' });
     }
 
@@ -4148,7 +4187,14 @@ app.post('/api/motivational/ai-youtube-assemble', async (req, res) => {
         return res.status(400).json({ error: 'Audio filename is required' });
     }
 
-    const audioPath = path.join(DOWNLOADS_DIR, audioFilename);
+    // Every clip must be an existing file inside the downloads directory. The
+    // names end up in an FFmpeg concat list, so reject anything else up front.
+    const clipPaths = clips.map(c => resolveDownload(c && c.filename));
+    if (clipPaths.some(p => !p || !fs.existsSync(p))) {
+        return res.status(400).json({ error: 'One or more clips are invalid or missing' });
+    }
+
+    const audioPath = resolveDownload(audioFilename);
     if (!fs.existsSync(audioPath)) {
         return res.status(404).json({ error: 'Audio file not found' });
     }
@@ -4163,7 +4209,7 @@ app.post('/api/motivational/ai-youtube-assemble', async (req, res) => {
 
     try {
         // Step 1: Create concat list for FFmpeg
-        const concatContent = clips.map(c => `file '${path.join(DOWNLOADS_DIR, c.filename)}'`).join('\n');
+        const concatContent = clipPaths.map(p => `file '${p.replace(/'/g, "'\\''")}'`).join('\n');
         fs.writeFileSync(concatListPath, concatContent);
 
         // Step 2: Concatenate all video clips
@@ -4240,7 +4286,7 @@ app.post('/api/motivational/ai-youtube-assemble', async (req, res) => {
             // Use Whisper for word-level timestamps
             let whisperWords = [];
             try {
-                whisperWords = await new Promise((resolve, reject) => {
+                whisperWords = await new Promise((resolve) => {
                     const whisperArgs = [
                         '-c',
                         `import whisper; import json; ` +
@@ -4252,10 +4298,8 @@ app.post('/api/motivational/ai-youtube-assemble', async (req, res) => {
 
                     const python = spawn('python3', whisperArgs);
                     let stdout = '';
-                    let stderr = '';
 
                     python.stdout.on('data', (data) => { stdout += data.toString(); });
-                    python.stderr.on('data', (data) => { stderr += data.toString(); });
 
                     python.on('close', (code) => {
                         if (code !== 0) {
@@ -4363,8 +4407,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         }
 
         // Cleanup individual clips
-        clips.forEach(c => {
-            const clipPath = path.join(DOWNLOADS_DIR, c.filename);
+        clipPaths.forEach(clipPath => {
             if (fs.existsSync(clipPath)) fs.unlinkSync(clipPath);
         });
 
@@ -4451,14 +4494,14 @@ app.post('/api/motivational/assemble-video', async (req, res) => {
         backgroundVideoFilename,
         script,
         captionStyle,
-        outputFormat
+        
     } = req.body;
 
     if (!audioFilename) {
         return res.status(400).json({ error: 'Audio filename is required' });
     }
 
-    const audioPath = path.join(DOWNLOADS_DIR, audioFilename);
+    const audioPath = resolveDownload(audioFilename);
 
     if (!fs.existsSync(audioPath)) {
         return res.status(404).json({ error: 'Audio file not found' });
@@ -4481,7 +4524,7 @@ app.post('/api/motivational/assemble-video', async (req, res) => {
         let baseVideoArgs = [];
 
         if (backgroundVideoFilename) {
-            const bgPath = path.join(DOWNLOADS_DIR, backgroundVideoFilename);
+            const bgPath = resolveDownload(backgroundVideoFilename);
             if (!fs.existsSync(bgPath)) {
                 return res.status(404).json({ error: 'Background video not found' });
             }
@@ -4544,7 +4587,7 @@ app.post('/api/motivational/assemble-video', async (req, res) => {
             // Use Whisper to get word-level timestamps
             let whisperWords = [];
             try {
-                whisperWords = await new Promise((resolve, reject) => {
+                whisperWords = await new Promise((resolve) => {
                     const whisperArgs = [
                         '-c',
                         `import whisper; import json; ` +
@@ -4629,7 +4672,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
                 console.log(`   Created ${phrases.length} synced phrases`);
 
-                phrases.forEach((phrase, idx) => {
+                phrases.forEach((phrase) => {
                     const startStr = formatASSTime(phrase.start);
                     const endStr = formatASSTime(phrase.end);
 
@@ -4802,9 +4845,9 @@ Return ONLY a JSON object:
 Return ONLY valid JSON, no other text.`;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${getGeminiApiKey()}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': getGeminiApiKey() },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
@@ -4930,6 +4973,10 @@ app.post('/api/sports/analyze-music', async (req, res) => {
         return res.status(400).json({ error: 'Music URL is required' });
     }
 
+    if (!isHttpUrl(musicUrl)) {
+        return res.status(400).json({ error: 'Music URL must be an http(s) URL' });
+    }
+
     console.log(`🏆 Sports: Analyzing music from ${musicUrl}`);
 
     try {
@@ -4938,6 +4985,7 @@ app.post('/api/sports/analyze-music', async (req, res) => {
             const args = [
                 '--dump-json',
                 '--no-download',
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 musicUrl
             ];
 
@@ -5002,9 +5050,9 @@ Return ONLY valid JSON:
 
 The section must be exactly ${videoDuration} seconds long.`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${getGeminiApiKey()}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': getGeminiApiKey() },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
@@ -5076,6 +5124,10 @@ app.post('/api/sports/download-music-section', async (req, res) => {
         return res.status(400).json({ error: 'musicUrl, start, and end are required' });
     }
 
+    if (!isHttpUrl(musicUrl)) {
+        return res.status(400).json({ error: 'musicUrl must be an http(s) URL' });
+    }
+
     console.log(`🏆 Sports: Downloading music section ${start} - ${end}`);
 
     const timestamp = Date.now();
@@ -5093,6 +5145,7 @@ app.post('/api/sports/download-music-section', async (req, res) => {
                 '--audio-format', 'mp3',
                 '--audio-quality', '0',
                 '-o', tempPath,
+                '--', // end of options: never let user input be parsed as a yt-dlp flag
                 musicUrl
             ];
 
@@ -5197,8 +5250,8 @@ app.post('/api/sports/merge-video-music', async (req, res) => {
         return res.status(400).json({ error: 'videoFilename and audioFilename are required' });
     }
 
-    const videoPath = path.join(DOWNLOADS_DIR, videoFilename);
-    const audioPath = path.join(DOWNLOADS_DIR, audioFilename);
+    const videoPath = resolveDownload(videoFilename);
+    const audioPath = resolveDownload(audioFilename);
 
     if (!fs.existsSync(videoPath)) {
         return res.status(404).json({ error: 'Video file not found' });
@@ -5275,7 +5328,7 @@ app.post('/api/sports/ai-suggest-music', async (req, res) => {
         return res.status(400).json({ error: 'videoFilename is required' });
     }
 
-    const videoPath = path.join(DOWNLOADS_DIR, videoFilename);
+    const videoPath = resolveDownload(videoFilename);
 
     if (!fs.existsSync(videoPath)) {
         return res.status(404).json({ error: 'Video file not found' });
@@ -5284,13 +5337,6 @@ app.post('/api/sports/ai-suggest-music', async (req, res) => {
     console.log(`🏆 Sports AI Music: Analyzing video ${videoFilename} for music suggestions`);
 
     try {
-        // Import the Google GenAI library
-        const { GoogleGenAI } = await import('@google/genai');
-
-        const genAI = new GoogleGenAI({ apiKey: getGeminiApiKey() });
-
-        // Upload the video to Gemini File API
-        console.log(`🏆 Sports AI Music: Uploading video to Gemini...`);
 
         const videoBuffer = fs.readFileSync(videoPath);
         const base64Video = videoBuffer.toString('base64');
@@ -5307,8 +5353,6 @@ app.post('/api/sports/ai-suggest-music', async (req, res) => {
         console.log(`🏆 Sports AI Music: Video duration: ${Math.round(videoDuration)}s, sending to Gemini...`);
 
         // Send to Gemini with video for analysis
-        const model = genAI.models;
-
         const prompt = `You are a professional music supervisor for viral sports content (TikTok, Instagram Reels, YouTube Shorts).
 
 Analyze this sports video and suggest the 3 BEST songs that would make this video go viral.
@@ -5343,9 +5387,9 @@ Return ONLY valid JSON in this exact format:
 
 Provide exactly 3 song suggestions. Make them diverse but all high-energy and fitting for sports content.`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${getGeminiApiKey()}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': getGeminiApiKey() },
             body: JSON.stringify({
                 contents: [{
                     parts: [
@@ -5497,30 +5541,6 @@ Provide exactly 5 diverse suggestions covering different types of viral content 
 
 IMPORTANT: Use Google Search to find ACTUAL viral clips and scenes from this ${type === 'tv_show' ? 'TV series' : 'movie'} that are popular on TikTok, Instagram Reels, or YouTube Shorts. Look for real scene names, actual episode numbers, and verified timestamps. Do not make up or hallucinate scenes.`;
 
-        const responseSchema = {
-            type: "object",
-            properties: {
-                title: { type: "string" },
-                type: { type: "string" },
-                suggestions: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            sceneName: { type: "string" },
-                            description: { type: "string" },
-                            whyViral: { type: "string" },
-                            locationHint: { type: "string" },
-                            duration: { type: "number" },
-                            captionIdeas: { type: "array", items: { type: "string" } },
-                            youtubeSearch: { type: "string" }
-                        },
-                        required: ["sceneName", "description", "whyViral", "locationHint", "duration", "captionIdeas", "youtubeSearch"]
-                    }
-                }
-            },
-            required: ["title", "type", "suggestions"]
-        };
 
         const aiResponse = await callGeminiForNews(prompt, true); // Use search grounding
 
@@ -5592,7 +5612,7 @@ app.post('/api/entertainment/generate-text-overlay', async (req, res) => {
         return res.status(400).json({ error: 'Video filename is required' });
     }
 
-    const videoPath = path.join(DOWNLOADS_DIR, videoFilename);
+    const videoPath = resolveDownload(videoFilename);
     if (!fs.existsSync(videoPath)) {
         return res.status(404).json({ error: 'Video file not found' });
     }
@@ -5641,11 +5661,9 @@ BEST PERFORMING HOOKS:
 
 Return ONLY the hook text, nothing else. No quotes, no explanation.`;
 
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use 1.5-flash for multimodal
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getGeminiApiKey()}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': getGeminiApiKey() },
                 body: JSON.stringify({
                     contents: [{
                         parts: [
@@ -5759,7 +5777,7 @@ Return ONLY the hook text, nothing else. No quotes, no explanation.`;
 
         await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', ffmpegArgs);
-            ffmpeg.stderr.on('data', data => { /* progress */ });
+            ffmpeg.stderr.on('data', () => { /* progress */ });
             ffmpeg.on('close', code => {
                 if (code === 0) resolve();
                 else reject(new Error(`FFmpeg exited with code ${code}`));
@@ -5798,51 +5816,6 @@ Return ONLY the hook text, nothing else. No quotes, no explanation.`;
 // NEWS SECTION ENDPOINTS (GEMINI POWERED)
 // ============================================
 
-// Fallback data for News Section
-const NEWS_STATIC_FALLBACKS = {
-    start: {
-        question: "What broad category of news are you most interested in today?",
-        options: ["Tech & Innovation", "Finance & Markets", "World Politics", "Entertainment & Sports"]
-    },
-    next: [
-        { question: "What specific aspect interests you most?", options: ["Latest updates", "In-depth analysis", "Expert opinions", "Future trends"] },
-        { question: "What's your preferred news format?", options: ["Quick headlines", "Detailed articles", "Data & statistics", "Visual stories"] },
-        { question: "How current should the news be?", options: ["Breaking news", "Today's summary", "This week's highlights", "Archived gems"] }
-    ],
-    niche: {
-        niche: "General News & Trends",
-        keywords: ["news", "updates", "trending"]
-    },
-    headlines: [
-        {
-            title: "Global Tech Summit Announces Groundbreaking Innovations",
-            summary: "The annual Tech Summit has kicked off with major announcements in AI, sustainable energy, and personal computing that could reshape the industry.",
-            source: "Tech Journal",
-            url: "#",
-            publishedAt: "2 hours ago",
-            trendingScore: 88,
-            isLatest: true
-        },
-        {
-            title: "Market Rally: Stocks Reach New Heights Amid Economic Optimism",
-            summary: "Major indices saw a significant boost today as investors reacted positively to latest inflation data and employment reports.",
-            source: "Financial Times",
-            url: "#",
-            publishedAt: "4 hours ago",
-            trendingScore: 72,
-            isLatest: false
-        },
-        {
-            title: "Entertainment Weekly: Blockbuster Season Sets New Records",
-            summary: "The latest box office numbers are in, and it's a historic year for cinemas worldwide with multiple films crossing the billion-dollar mark.",
-            source: "Variety",
-            url: "#",
-            publishedAt: "5 hours ago",
-            trendingScore: 95,
-            isLatest: true
-        }
-    ]
-};
 
 // Start questionnaire - get initial question
 app.post('/api/news/start-questionnaire', async (req, res) => {
@@ -6315,7 +6288,27 @@ app.post('/api/news/generate-image-post', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`🎙️  Podcast Studio Server running on http://localhost:${PORT}`);
-    console.log(`📁 Downloads directory: ${DOWNLOADS_DIR}`);
+// Unknown API routes -> JSON 404 instead of Express' HTML page
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: `No route for ${req.method} ${req.originalUrl}` });
 });
+
+// Last-resort error handler (malformed JSON, oversized bodies, thrown errors)
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    const status = err.status || err.statusCode || 500;
+    if (status >= 500) console.error('Unhandled error:', err);
+    res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
+});
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`🎬 EasyEdits API server running on http://localhost:${PORT}`);
+        console.log(`📁 Downloads directory: ${DOWNLOADS_DIR}`);
+        if (geminiKeyPool.size === 0) {
+            console.warn('⚠️  No Gemini API key configured: AI features will be unavailable.');
+        }
+    });
+}
+
+module.exports = { app };

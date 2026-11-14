@@ -3,26 +3,42 @@
  * Handles job creation, status updates, and polling for the cloud processing pipeline
  */
 
-const admin = require('firebase-admin');
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const path = require('path');
 
 // Initialize Firebase Admin SDK
 let db = null;
 
+/**
+ * Load the Firebase service account from (in order):
+ *   FIREBASE_SERVICE_ACCOUNT_JSON  - the JSON document itself
+ *   FIREBASE_SERVICE_ACCOUNT_PATH  - path to the JSON file
+ *   server/firebase-service-account.json (git-ignored)
+ */
+function loadServiceAccount() {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+        return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    }
+    const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+        ? path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+        : path.join(__dirname, 'firebase-service-account.json');
+    return require(serviceAccountPath);
+}
+
 function initializeFirebase() {
     if (db) return db;
 
     try {
-        const serviceAccountPath = path.join(__dirname, 'firebase-service-account.json');
-        const serviceAccount = require(serviceAccountPath);
+        const serviceAccount = loadServiceAccount();
 
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount)
+        if (!getApps().length) {
+            initializeApp({
+                credential: cert(serviceAccount)
             });
         }
 
-        db = admin.firestore();
+        db = getFirestore();
         console.log('✅ Firebase Firestore initialized');
         return db;
     } catch (error) {
@@ -64,8 +80,8 @@ async function createJob(jobData, initialStatus = JobStatus.PENDING) {
         progress: 0,
         error: null,
         ...jobData,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
     };
 
     await jobRef.set(jobDoc);
@@ -103,7 +119,7 @@ async function updateJob(jobId, updates) {
     const jobRef = db.collection(JOBS_COLLECTION).doc(jobId);
     await jobRef.update({
         ...updates,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
     });
 
     console.log(`📝 Updated job ${jobId}:`, updates);
