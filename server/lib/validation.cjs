@@ -74,8 +74,15 @@ function isPublicHttpUrl(value) {
   if (net.isIPv6(host)) {
     if (host === '::' || host === '::1') return false;
     if (/^(fc|fd|fe8|fe9|fea|feb)/.test(host)) return false;
-    const mapped = host.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) return !isPrivateIPv4(mapped[1]);
+    // IPv4-mapped addresses; URL() normalises ::ffff:127.0.0.1 to ::ffff:7f00:1
+    const dotted = host.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (dotted) return !isPrivateIPv4(dotted[1]);
+    const hex = host.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+    if (hex) {
+      const high = parseInt(hex[1], 16);
+      const low = parseInt(hex[2], 16);
+      return !isPrivateIPv4(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`);
+    }
   }
   return true;
 }

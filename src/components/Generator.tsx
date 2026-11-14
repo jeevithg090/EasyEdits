@@ -27,6 +27,18 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'script' | 'visuals'>('script');
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyHook = async () => {
+    if (!scriptData) return;
+    try {
+      await navigator.clipboard.writeText(scriptData.hook);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError('Could not copy to the clipboard.');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!topic.trim()) return;
@@ -215,7 +227,7 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
                             key={i}
                             className="text-xs text-brand-300 bg-brand-500/10 px-2 py-1 rounded-md border border-brand-500/20"
                           >
-                            #{tag}
+                            #{tag.replace(/^#+/, '')}
                           </span>
                         ))}
                       </div>
@@ -223,9 +235,15 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
 
                     {/* The Hook */}
                     <div className="relative group glass-card p-6 rounded-xl border-l-4 border-brand-500">
-                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="text-gray-400 hover:text-white" title="Copy">
-                          <Copy className="w-4 h-4" />
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={handleCopyHook}
+                          className="text-gray-400 hover:text-white"
+                          title={copied ? 'Copied!' : 'Copy hook'}
+                          aria-label={copied ? 'Hook copied' : 'Copy hook'}
+                        >
+                          <Copy className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </div>
                       <h3 className="text-sm font-semibold text-brand-400 uppercase tracking-wide mb-2">
