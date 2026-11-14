@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../lib/api';
 import {
     ArrowLeft, Newspaper, Sparkles, Loader2, AlertCircle, X,
     ChevronRight, Check, RefreshCw, Copy, Image, TrendingUp,
@@ -108,7 +109,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/news/start-questionnaire', {
+            const response = await fetch(`${API_BASE}/api/news/start-questionnaire`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -149,7 +150,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
                 return;
             }
 
-            const response = await fetch('http://localhost:3005/api/news/next-question', {
+            const response = await fetch(`${API_BASE}/api/news/next-question`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ conversationHistory: newHistory })
@@ -180,7 +181,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
         setIsLoadingQuestion(true);
 
         try {
-            const response = await fetch('http://localhost:3005/api/news/finish-questionnaire', {
+            const response = await fetch(`${API_BASE}/api/news/finish-questionnaire`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ conversationHistory: history })
@@ -207,7 +208,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/news/fetch', {
+            const response = await fetch(`${API_BASE}/api/news/fetch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ niche: nicheText, keywords })
@@ -240,7 +241,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/news/generate-image-prompt', {
+            const response = await fetch(`${API_BASE}/api/news/generate-image-prompt`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -277,7 +278,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/news/generate-image-post', {
+            const response = await fetch(`${API_BASE}/api/news/generate-image-post`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

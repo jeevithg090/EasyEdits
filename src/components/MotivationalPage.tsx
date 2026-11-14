@@ -1,10 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE } from '../lib/api';
 import {
-    ArrowLeft, Quote, Sparkles, Shuffle, Copy, Check, Play, Pause,
-    Download, Loader2, AlertCircle, X, ChevronDown, Volume2,
-    Video, Mic, Type, Image, Music, Zap, RefreshCw, BookOpen,
-    Brain, Heart, TrendingUp, Flame, Sun, Moon, Mountain, Building2,
-    ExternalLink
+  ArrowLeft,
+  Quote,
+  Sparkles,
+  Shuffle,
+  Copy,
+  Check,
+  Play,
+  Pause,
+  Download,
+  Loader2,
+  AlertCircle,
+  X,
+  ChevronDown,
+  Volume2,
+  Video,
+  Mic,
+  Type,
+  Zap,
+  RefreshCw,
+  BookOpen,
+  Brain,
+  Heart,
+  TrendingUp,
+  Flame,
+  ExternalLink,
 } from 'lucide-react';
 
 interface MotivationalPageProps {
@@ -65,13 +86,44 @@ const NICHES = [
     }
 ];
 
-// Visual style presets
-const VISUAL_STYLES = [
-    { key: 'dark_mode', name: 'Dark Mode', icon: Moon, description: 'Dramatic & high contrast' },
-    { key: 'sunrise', name: 'Sunrise', icon: Sun, description: 'Warm golden tones' },
-    { key: 'nature', name: 'Nature', icon: Mountain, description: 'Forest & mountains' },
-    { key: 'urban', name: 'Urban', icon: Building2, description: 'City & hustle' }
-];
+interface MotivationalScript {
+    hook: string;
+    quote: string;
+    author: string;
+    explanation: string;
+    cta: string;
+    hashtags?: string[];
+    visualCues?: string[];
+    estimatedDuration?: number;
+}
+
+interface VoiceOption {
+    key: string;
+    name: string;
+}
+
+interface AiBrollSuggestions {
+    notes?: string;
+    [key: string]: unknown;
+}
+
+interface ResolvedClip {
+    index?: number;
+    videoTitle?: string;
+    actualTitle?: string;
+    youtubeUrl?: string;
+    thumbnailUrl?: string;
+    startTime?: string;
+    endTime?: string;
+    duration?: number;
+    segment?: string;
+    [key: string]: unknown;
+}
+
+interface DownloadedClip {
+    filename: string;
+    [key: string]: unknown;
+}
 
 // Hook categories
 const HOOK_CATEGORIES = [
@@ -96,14 +148,14 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
     const [isLoadingQuote, setIsLoadingQuote] = useState(false);
 
     // Script state
-    const [script, setScript] = useState<any>(null);
+    const [script, setScript] = useState<MotivationalScript | null>(null);
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
     const [selectedHookCategory, setSelectedHookCategory] = useState('wisdom');
     const [hooks, setHooks] = useState<Record<string, string[]>>({});
     const [selectedHook, setSelectedHook] = useState('');
 
     // Voice state
-    const [voices, setVoices] = useState<any[]>([]);
+    const [voices, setVoices] = useState<VoiceOption[]>([]);
     const [selectedVoice, setSelectedVoice] = useState('male-deep');
     const [voiceSpeed, setVoiceSpeed] = useState('+0%');
     const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
@@ -111,11 +163,8 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
     const [isPlayingVoice, setIsPlayingVoice] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    // Visual style state
-    const [selectedVisualStyle, setSelectedVisualStyle] = useState('dark_mode');
-    const [brollResults, setBrollResults] = useState<any[]>([]);
+    // Background video state
     const [selectedBroll, setSelectedBroll] = useState<string | null>(null);
-    const [isSearchingBroll, setIsSearchingBroll] = useState(false);
 
     // YouTube B-Roll state
     const [brollUrl, setBrollUrl] = useState('');
@@ -125,10 +174,10 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
     // AI YouTube B-Roll state
     const [brollMode, setBrollMode] = useState<'manual' | 'ai'>('manual');
-    const [aiSuggestions, setAiSuggestions] = useState<any>(null);
-    const [resolvedClips, setResolvedClips] = useState<any[]>([]);
+    const [aiSuggestions, setAiSuggestions] = useState<AiBrollSuggestions | null>(null);
+    const [resolvedClips, setResolvedClips] = useState<ResolvedClip[]>([]);
     const [approvedClipIndices, setApprovedClipIndices] = useState<Set<number>>(new Set());
-    const [aiDownloadedClips, setAiDownloadedClips] = useState<any[]>([]);
+    const [aiDownloadedClips, setAiDownloadedClips] = useState<DownloadedClip[]>([]);
     const [isGettingAiSuggestions, setIsGettingAiSuggestions] = useState(false);
     const [isResolvingClips, setIsResolvingClips] = useState(false);
     const [isDownloadingAiClips, setIsDownloadingAiClips] = useState(false);
@@ -145,11 +194,10 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
     // UI state
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
-    const [activeSection, setActiveSection] = useState<'quote' | 'script' | 'voice' | 'visual' | 'export'>('quote');
 
     // Load hooks on mount
     useEffect(() => {
-        fetch('http://localhost:3005/api/motivational/hooks')
+        fetch(`${API_BASE}/api/motivational/hooks`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -162,7 +210,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
             })
             .catch(console.error);
 
-        fetch('http://localhost:3005/api/motivational/voices')
+        fetch(`${API_BASE}/api/motivational/voices`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -185,7 +233,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         setError(null);
 
         try {
-            const response = await fetch(`http://localhost:3005/api/motivational/quote/${selectedNiche.quoteSource}`);
+            const response = await fetch(`${API_BASE}/api/motivational/quote/${selectedNiche.quoteSource}`);
             const data = await response.json();
 
             if (data.success) {
@@ -207,7 +255,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/motivational/generate-quote', {
+            const response = await fetch(`${API_BASE}/api/motivational/generate-quote`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -249,7 +297,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/motivational/expand-script', {
+            const response = await fetch(`${API_BASE}/api/motivational/expand-script`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -264,7 +312,6 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
             if (data.success) {
                 setScript(data.script);
-                setActiveSection('script');
             } else {
                 throw new Error(data.error || 'Failed to generate script');
             }
@@ -289,7 +336,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         const spokenText = `${script.hook} ${script.quote} ${script.explanation} ${script.cta}`;
 
         try {
-            const response = await fetch('http://localhost:3005/api/motivational/generate-voice', {
+            const response = await fetch(`${API_BASE}/api/motivational/generate-voice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -301,8 +348,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
             const data = await response.json();
 
             if (data.success) {
-                setVoiceAudioPath(`http://localhost:3005${data.audioPath}`);
-                setActiveSection('voice');
+                setVoiceAudioPath(`${API_BASE}${data.audioPath}`);
             } else {
                 throw new Error(data.error || 'Failed to generate voice');
             }
@@ -325,34 +371,6 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         }
     };
 
-    // Search B-Roll
-    const searchBroll = async () => {
-        if (!script?.visualCues || script.visualCues.length === 0) {
-            setError('Please generate a script first');
-            return;
-        }
-
-        setIsSearchingBroll(true);
-        setError(null);
-
-        try {
-            const searchQuery = script.visualCues[0]; // Use first visual cue
-            const response = await fetch(`http://localhost:3005/api/broll/search?query=${encodeURIComponent(searchQuery)}&type=video&perPage=8`);
-            const data = await response.json();
-
-            if (data.success) {
-                setBrollResults(data.results || []);
-                setActiveSection('visual');
-            } else {
-                throw new Error(data.error || 'Failed to search B-Roll');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to search B-Roll');
-        } finally {
-            setIsSearchingBroll(false);
-        }
-    };
-
     // Download YouTube B-Roll
     const downloadBroll = async () => {
         if (!brollUrl) {
@@ -364,7 +382,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/motivational/download-broll', {
+            const response = await fetch(`${API_BASE}/api/motivational/download-broll`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -378,7 +396,6 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
             if (data.success) {
                 setSelectedBroll(data.filename);
-                setActiveSection('visual');
             } else {
                 throw new Error(data.error || 'Failed to download B-Roll');
             }
@@ -405,7 +422,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
         try {
             // Step 1: Get AI suggestions
-            const response = await fetch('http://localhost:3005/api/motivational/ai-youtube-suggest', {
+            const response = await fetch(`${API_BASE}/api/motivational/ai-youtube-suggest`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -423,7 +440,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                 setIsGettingAiSuggestions(false);
                 setIsResolvingClips(true);
 
-                const resolveResponse = await fetch('http://localhost:3005/api/motivational/ai-youtube-resolve', {
+                const resolveResponse = await fetch(`${API_BASE}/api/motivational/ai-youtube-resolve`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ clips: data.suggestions.clips })
@@ -458,7 +475,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
     };
 
     // Open YouTube video at timestamp
-    const openYouTubeClip = (clip: any) => {
+    const openYouTubeClip = (clip: ResolvedClip) => {
         if (clip.youtubeUrl) {
             window.open(clip.youtubeUrl, '_blank');
         }
@@ -473,7 +490,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/motivational/ai-youtube-alternative', {
+            const response = await fetch(`${API_BASE}/api/motivational/ai-youtube-alternative`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -520,7 +537,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/motivational/ai-youtube-download', {
+            const response = await fetch(`${API_BASE}/api/motivational/ai-youtube-download`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clips: approvedClips })
@@ -560,7 +577,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
         try {
             const audioFilename = voiceAudioPath.split('/').pop();
 
-            const response = await fetch('http://localhost:3005/api/motivational/ai-youtube-assemble', {
+            const response = await fetch(`${API_BASE}/api/motivational/ai-youtube-assemble`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -573,8 +590,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
             const data = await response.json();
 
             if (data.success) {
-                setAssembledVideoPath(`http://localhost:3005${data.videoPath}`);
-                setActiveSection('export');
+                setAssembledVideoPath(`${API_BASE}${data.videoPath}`);
             } else {
                 throw new Error(data.error || 'Failed to assemble video');
             }
@@ -599,7 +615,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
             // Extract filename from path
             const audioFilename = voiceAudioPath.split('/').pop();
 
-            const response = await fetch('http://localhost:3005/api/motivational/assemble-video', {
+            const response = await fetch(`${API_BASE}/api/motivational/assemble-video`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -612,8 +628,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
             const data = await response.json();
 
             if (data.success) {
-                setAssembledVideoPath(`http://localhost:3005${data.videoPath}`);
-                setActiveSection('export');
+                setAssembledVideoPath(`${API_BASE}${data.videoPath}`);
             } else {
                 throw new Error(data.error || 'Failed to assemble video');
             }
@@ -695,7 +710,6 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {NICHES.map((niche) => {
-                        const Icon = niche.icon;
                         const isSelected = selectedNiche.key === niche.key;
                         return (
                             <button
@@ -747,7 +761,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                                 return (
                                     <button
                                         key={mode.key}
-                                        onClick={() => setQuoteMode(mode.key as any)}
+                                        onClick={() => setQuoteMode(mode.key as typeof quoteMode)}
                                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${quoteMode === mode.key
                                             ? `${accentClasses.bg} ${accentClasses.text}`
                                             : 'text-gray-400 hover:text-white'
@@ -1050,7 +1064,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                                 </>
                             ) : (
                                 <>
-                                    <Volume2 className="w-5 h-5 mr-2" icon />
+                                    <Volume2 className="w-5 h-5 mr-2" aria-hidden="true" />
                                     Generate Voiceover
                                 </>
                             )}
@@ -1170,7 +1184,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                                             </button>
                                         </div>
                                         <video
-                                            src={`http://localhost:3005/api/videos/file/${selectedBroll}`}
+                                            src={`${API_BASE}/api/videos/file/${selectedBroll}`}
                                             className="w-full rounded-lg aspect-[9/16] object-cover"
                                             muted loop autoPlay playsInline
                                         />
@@ -1221,7 +1235,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                                 {/* Show Resolved Clips with Interactive Controls */}
                                 {resolvedClips.length > 0 && (
                                     <div className="space-y-2 mb-4 max-h-80 overflow-y-auto">
-                                        {resolvedClips.map((clip: any, idx: number) => {
+                                        {resolvedClips.map((clip, idx) => {
                                             const isApproved = approvedClipIndices.has(idx);
                                             const isLoadingAlt = loadingAlternativeIndex === idx;
 

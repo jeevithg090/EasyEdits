@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { CategoryCard } from './components/CategoryCard';
+
 import { Generator } from './components/Generator';
 import { PodcastPage } from './components/PodcastPage';
 import { TextHighlighterPage } from './components/TextHighlighterPage';
@@ -24,14 +24,11 @@ import {
   Trophy,
   Newspaper,
   ChevronDown,
-  Star,
-  Users,
   TrendingUp,
-  Clock,
   Github,
   Twitter,
   Instagram,
-  Check
+  Check,
 } from 'lucide-react';
 
 const categories = Object.values(ContentCategory);

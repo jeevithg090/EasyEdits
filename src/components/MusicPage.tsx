@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Music2, Link, Download, Play, AlertCircle, Loader2, Sparkles, X, Video, Wand2, Filter, Type, Palette, Zap, Volume2, Eye, ChevronDown, RefreshCw, Mic, Cloud, Cpu } from 'lucide-react';
+import { API_BASE } from '../lib/api';
+import { ArrowLeft, Music2, Link, Download, Play, AlertCircle, Loader2, Sparkles, X, Video, Wand2, Filter, Type, Palette, Volume2, ChevronDown, Mic, Cloud, Cpu } from 'lucide-react';
 
 interface MusicPageProps {
     onBack: () => void;
@@ -171,7 +172,6 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
     const [selectedFilterCategory, setSelectedFilterCategory] = useState<keyof typeof VIDEO_FILTERS>('aesthetic');
     const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
     const [filterIntensity, setFilterIntensity] = useState(100);
-    const [showFilterPreview, setShowFilterPreview] = useState(false);
 
     // Caption state
     const [selectedCaptionStyle, setSelectedCaptionStyle] = useState<string | null>(null);
@@ -197,7 +197,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
 
     // Transcription state
     const [isTranscribing, setIsTranscribing] = useState(false);
-    const [transcription, setTranscription] = useState<{ text: string; words: any[] } | null>(null);
+    const [transcription, setTranscription] = useState<{ text: string; words?: unknown[] } | null>(null);
 
     // Content Resources Modal
     const [showContentResources, setShowContentResources] = useState(false);
@@ -223,7 +223,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
         }, 500);
 
         try {
-            const response = await fetch('http://localhost:3005/api/music-video/download', {
+            const response = await fetch(`${API_BASE}/api/music-video/download`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: videoUrl }),
@@ -238,7 +238,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
 
             const data = await response.json();
             setDownloadProgress(100);
-            setVideoPath(`http://localhost:3005/api/videos/file/${data.filename}`);
+            setVideoPath(`${API_BASE}/api/videos/file/${data.filename}`);
             setVideoFilename(data.filename);
             setShowContentResources(false);
         } catch (err) {
@@ -261,7 +261,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
         setTranscription(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/music-video/transcribe', {
+            const response = await fetch(`${API_BASE}/api/music-video/transcribe`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ videoFilename }),
@@ -310,7 +310,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
         }, 1000);
 
         try {
-            const response = await fetch('http://localhost:3005/api/music-video/process', {
+            const response = await fetch(`${API_BASE}/api/music-video/process`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -342,7 +342,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
                 setColabJobId(data.jobId);
                 // Would poll for job status here
             } else {
-                setProcessedVideoPath(`http://localhost:3005${data.videoPath}`);
+                setProcessedVideoPath(`${API_BASE}${data.videoPath}`);
             }
         } catch (err) {
             clearInterval(progressInterval);

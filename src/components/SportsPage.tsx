@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { API_BASE } from '../lib/api';
 import { ArrowLeft, Video, Link, Music, Loader2, CheckCircle2, XCircle, RefreshCw, Play, Pause, Download, Volume2, Sparkles } from 'lucide-react';
 
 interface SportsPageProps {
@@ -68,7 +69,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
         setFinalVideoPath(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/content-crop', {
+            const response = await fetch(`${API_BASE}/api/content-crop`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ videoUrl }),
@@ -80,7 +81,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
             }
 
             const data = await response.json();
-            setVideoPath(`http://localhost:3005${data.videoPath}`);
+            setVideoPath(`${API_BASE}${data.videoPath}`);
             setVideoFilename(data.filename);
             setShowMusicSection(true);
 
@@ -104,7 +105,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
         setShowAiSuggestions(false);
 
         try {
-            const response = await fetch('http://localhost:3005/api/sports/ai-suggest-music', {
+            const response = await fetch(`${API_BASE}/api/sports/ai-suggest-music`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ videoFilename }),
@@ -157,7 +158,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
         setAudioFilename(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/sports/analyze-music', {
+            const response = await fetch(`${API_BASE}/api/sports/analyze-music`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -188,7 +189,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/sports/download-music-section', {
+            const response = await fetch(`${API_BASE}/api/sports/download-music-section`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -205,7 +206,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
 
             const data = await response.json();
             setAudioFilename(data.filename);
-            setAudioPreviewUrl(`http://localhost:3005${data.audioPath}`);
+            setAudioPreviewUrl(`${API_BASE}${data.audioPath}`);
 
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred while downloading music');
@@ -250,7 +251,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
         setFinalVideoPath(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/sports/merge-video-music', {
+            const response = await fetch(`${API_BASE}/api/sports/merge-video-music`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -265,7 +266,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
             }
 
             const data = await response.json();
-            setFinalVideoPath(`http://localhost:3005${data.videoPath}`);
+            setFinalVideoPath(`${API_BASE}${data.videoPath}`);
 
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred during merge');
