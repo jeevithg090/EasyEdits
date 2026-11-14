@@ -1,42 +1,46 @@
 # Next Steps
 
-Date: 2026-02-03
+This document tracks the remaining work to keep **Easy Edits** stable and moving forward.
 
-This document captures the immediate fixes and the near-term work to keep **easy-edits** stable and moving forward.
+## Done
 
-## Priority Fixes (Do First)
+- Secrets removed from code: all keys are read from environment variables (`server/.env.example`),
+  the Colab worker reads Colab Secrets, and the Gemini key no longer ships in the browser bundle.
+- Committed media, virtual environments and macOS metadata removed; `.gitignore` covers them.
+- Path traversal, `yt-dlp` option injection and SSRF guards on media endpoints, with tests.
+- Config centralised in `server/lib/config.cjs` (port, CORS, body limit, model ids).
+- Test suite (Vitest + Supertest + Testing Library), linting (ESLint, Ruff), formatting
+  (Prettier, Ruff) and CI.
 
-1. **Remove hardcoded Gemini API keys from code**
-   The Gemini API key pool is hardcoded in `server/server.cjs`, which is a security risk. Move keys to environment variables and rotate/revoke the exposed keys.
-2. **Remove service account keys from the repo**
-   There are Firebase service account JSON files under `server/`. These should not live in the repo. Remove them, rotate the keys, and load credentials from `.env` or a secrets manager.
-3. **Replace mock AI beat detection**
-   The `/api/music-video/ai-beat-detect` endpoint returns mock beat data. Implement real beat detection (e.g., FFmpeg audio analysis or `librosa`) and update the response accordingly.
+## Priority fixes
 
-## Next Steps (Build Roadmap)
+1. **Rotate any credentials that were ever committed**
+   Earlier versions of these notes recorded hardcoded Gemini keys and Firebase service-account
+   files in the working copy. Rotate/revoke those credentials even though they are not in the
+   repository.
+2. **Replace mock AI beat detection**
+   `/api/music-video/ai-beat-detect` returns placeholder data. Implement real beat detection
+   (e.g. FFmpeg audio analysis or `librosa`).
+3. **Authentication and rate limiting**
+   Required before the API is reachable by anyone other than its owner.
 
-1. **Modularize the server**
-   `server/server.cjs` is ~6,300 lines. Split routes into modules (e.g., `routes/`, `services/`, `lib/`) and add a simple dependency boundary.
-2. **Define a stable config system**
-   Standardize config loading (API keys, file paths, feature toggles). Document required env vars and add validation at startup.
-3. **Add a minimal test and health suite**
-   Add smoke tests for critical endpoints (upload, export, transcription, AI calls) and a basic health check endpoint for deployments.
+## Roadmap
 
-## Cleanup / Repo Hygiene
+1. **Modularise the server**
+   `server/server.cjs` is ~6,000 lines. Continue the pattern started in `server/routes/` and
+   `server/lib/`: one router per studio (podcast, music, motivational, sports, entertainment,
+   news, text highlighter), shared helpers for spawning `yt-dlp`/FFmpeg, and route-level tests.
+2. **Downloads lifecycle**
+   Add a retention policy / cleanup job for `server/downloads/`.
+3. **Job progress**
+   Long-running requests currently hold the HTTP connection open. Move them to background jobs
+   with progress polling (the cloud job queue already follows this pattern).
+4. **Split large page components**
+   Several studio pages exceed 1,000 lines; extract hooks and sub-components so they can be
+   tested in isolation.
 
-1. **Avoid committing large/binary artifacts**
-   Large video files and local artifacts are present in the repo root. Move to a `samples/` or `assets/` directory and update `.gitignore` if needed.
-2. **Exclude local virtual environments**
-   `server/venv` and `server/autocrop-vertical/venv` should be gitignored and removed from version control.
-3. **Validate `.env.local` usage**
-   Ensure the frontend reads required keys from `.env.local` only and no secrets are committed.
+## Open questions
 
-## Open Questions
-
-1. Which environment is the primary deployment target (local, VPS, serverless)?
+1. Which environment is the primary deployment target (local, VPS, container platform)?
 2. Should the AI features run locally, in Colab, or via hosted services by default?
 3. Which user workflows are highest priority (shorts, long-form, captions, B-roll, music)?
-
----
-
-If you want, I can convert this into a tracked issue list (GitHub Projects/Issues) and break down each item into concrete tasks with owners and estimates.
