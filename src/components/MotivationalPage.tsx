@@ -695,7 +695,11 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       {/* Hidden Audio Element */}
-      <audio ref={audioRef} src={voiceAudioPath || ''} onEnded={() => setIsPlayingVoice(false)} />
+      <audio
+        ref={audioRef}
+        src={voiceAudioPath || undefined}
+        onEnded={() => setIsPlayingVoice(false)}
+      />
 
       {/* Header */}
       <div className="mb-8">

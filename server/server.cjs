@@ -187,6 +187,21 @@ const DOWNLOADS_DIR = path.join(__dirname, 'downloads');
  */
 const resolveDownload = (name) => resolveInside(DOWNLOADS_DIR, name);
 
+// Routes that cannot work at all without Gemini: fail fast with a clear message.
+const GEMINI_ONLY_ROUTES = [
+  '/api/news',
+  '/api/entertainment/suggest-scenes',
+  '/api/motivational/ai-youtube-suggest',
+  '/api/motivational/ai-youtube-alternative',
+  '/api/sports/ai-suggest-music',
+];
+app.use(GEMINI_ONLY_ROUTES, (req, res, next) => {
+  if (!getGeminiApiKey()) {
+    return res.status(503).json({ error: 'GEMINI_API_KEY is not configured on the server' });
+  }
+  next();
+});
+
 // Ensure downloads directory exists
 if (!fs.existsSync(DOWNLOADS_DIR)) {
   fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
@@ -1663,13 +1678,7 @@ app.post('/api/create-content/script', async (req, res) => {
 
   try {
     await new Promise((resolve, reject) => {
-      const args = [
-        scriptPath,
-        '--action',
-        'script',
-        '--topic',
-        topic,
-      ];
+      const args = [scriptPath, '--action', 'script', '--topic', topic];
 
       if (comment && comment.trim()) {
         args.push('--comment', comment);
@@ -1748,13 +1757,7 @@ app.post('/api/create-content/resources', async (req, res) => {
 
   try {
     await new Promise((resolve, reject) => {
-      const args = [
-        scriptPath,
-        '--action',
-        'resources',
-        '--topic',
-        topic,
-      ];
+      const args = [scriptPath, '--action', 'resources', '--topic', topic];
 
       if (comment && comment.trim()) {
         args.push('--comment', comment);
@@ -1814,6 +1817,10 @@ const SPEECHIFY_API_BASE = 'https://api.sws.speechify.com';
 
 // Get available voices from Speechify
 app.get('/api/audio/voices', async (req, res) => {
+  if (!SPEECHIFY_API_KEY) {
+    return res.status(503).json({ error: 'SPEECHIFY_API_KEY is not configured on the server' });
+  }
+
   console.log('🎙️ Audio: Fetching available voices...');
 
   try {
@@ -1864,6 +1871,10 @@ app.get('/api/audio/voices', async (req, res) => {
 // Generate audio from script using Speechify
 app.post('/api/audio/generate', async (req, res) => {
   const { script, plainScript, voiceId, speed = 'medium', isSSML = false } = req.body;
+
+  if (!SPEECHIFY_API_KEY) {
+    return res.status(503).json({ error: 'SPEECHIFY_API_KEY is not configured on the server' });
+  }
 
   if (!script || !script.trim()) {
     return res.status(400).json({ error: 'Missing required field: script' });

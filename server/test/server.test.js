@@ -11,6 +11,15 @@ let downloadsDir;
 const probeName = `test_probe_${process.pid}.mp4`;
 
 beforeAll(() => {
+  // Pin configuration so a developer's local server/.env cannot change the
+  // results (dotenv never overrides variables that are already set).
+  Object.assign(process.env, {
+    GEMINI_API_KEY: '',
+    GEMINI_API_KEYS: '',
+    GEMINI_API_KEY_1: '',
+    GEMINI_API_KEY_2: '',
+    CORS_ORIGINS: 'http://localhost:3000',
+  });
   // Keep module start-up logs out of the test output.
   vi.spyOn(console, 'log').mockImplementation(() => {});
   ({ app } = require('../server.cjs'));
@@ -123,5 +132,15 @@ describe('API server', () => {
 
     const blocked = await request(app).get('/api/health').set('Origin', 'https://evil.example');
     expect(blocked.headers['access-control-allow-origin']).toBeUndefined();
+  });
+});
+
+describe('Gemini-only routes without a key', () => {
+  it('return 503 with an actionable message', async () => {
+    for (const route of ['/api/news/start-questionnaire', '/api/entertainment/suggest-scenes']) {
+      const res = await request(app).post(route).send({ title: 'Inception' });
+      expect(res.status).toBe(503);
+      expect(res.body.error).toMatch(/GEMINI_API_KEY/);
+    }
   });
 });
