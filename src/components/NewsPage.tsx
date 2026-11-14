@@ -384,14 +384,14 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-white text-sm mb-4 transition-colors flex items-center group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Categories
+        <button onClick={onBack} type="button" className="back-link group mb-4">
+          <ArrowLeft
+            className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            aria-hidden="true"
+          />
+          All studios
         </button>
-        <h1 className="text-4xl font-bold text-white flex items-center">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
           <Newspaper className="w-10 h-10 mr-3 text-blue-400" />
           News Discovery
           {niche && (
@@ -407,18 +407,26 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+        <div
+          role="alert"
+          className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+        >
           <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
           <p className="text-red-300 text-sm">{error}</p>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-4 h-4 text-red-400 hover:text-red-300" />
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="ml-auto -m-2 p-2 rounded-lg"
+            aria-label="Dismiss error"
+          >
+            <X className="w-4 h-4 text-red-400 hover:text-red-300" aria-hidden="true" />
           </button>
         </div>
       )}
 
       {/* Progress Steps */}
       <div className="mb-8">
-        <div className="flex items-center justify-center space-x-4">
+        <ol className="flex items-center justify-center gap-2 sm:gap-4" aria-label="Progress">
           {[
             { key: 'questionnaire', label: 'Discover', icon: MessageSquare },
             { key: 'news', label: 'News', icon: Newspaper },
@@ -432,10 +440,14 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
             return (
               <React.Fragment key={step.key}>
                 {idx > 0 && (
-                  <div className={`w-12 h-0.5 ${isComplete ? 'bg-blue-500' : 'bg-gray-700'}`} />
+                  <li
+                    aria-hidden="true"
+                    className={`w-4 sm:w-12 h-0.5 ${isComplete ? 'bg-blue-500' : 'bg-gray-700'}`}
+                  />
                 )}
-                <div
-                  className={`flex items-center px-4 py-2 rounded-full transition-all ${
+                <li
+                  aria-current={isActive ? 'step' : undefined}
+                  className={`flex items-center px-3 sm:px-4 py-2 rounded-full transition-all ${
                     isActive
                       ? 'bg-blue-500/20 text-blue-300 border border-blue-500'
                       : isComplete
@@ -449,11 +461,11 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
                     <Icon className="w-4 h-4 mr-2" />
                   )}
                   <span className="text-sm font-medium">{step.label}</span>
-                </div>
+                </li>
               </React.Fragment>
             );
           })}
-        </div>
+        </ol>
       </div>
 
       {/* Section 1: Questionnaire */}
@@ -476,8 +488,8 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
 
           {/* Current Question */}
           {isLoadingQuestion ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <Loader2 className="w-10 h-10 text-blue-400 animate-spin mb-4" />
+            <div role="status" className="flex flex-col items-center justify-center py-16">
+              <Loader2 className="w-10 h-10 text-blue-400 animate-spin mb-4" aria-hidden="true" />
               <p className="text-gray-400">
                 {questionCount === 0 ? 'Starting questionnaire...' : 'Analyzing your interests...'}
               </p>
@@ -495,6 +507,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
                 {currentQuestion.options.map((option, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => handleAnswer(option)}
                     className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-left text-white hover:bg-blue-500/20 hover:border-blue-500 transition-all group flex items-center justify-between"
                   >
@@ -509,7 +522,26 @@ export const NewsPage: React.FC<NewsPageProps> = ({ onBack }) => {
               <Loader2 className="w-10 h-10 text-blue-400 animate-spin mb-4" />
               <p className="text-gray-400">Fetching personalized news...</p>
             </div>
-          ) : null}
+          ) : (
+            <div className="glass-card rounded-2xl p-8 text-center">
+              <MessageSquare className="mx-auto mb-4 h-10 w-10 text-gray-500" aria-hidden="true" />
+              <h2 className="mb-2 text-lg font-semibold text-white">
+                The questionnaire could not start
+              </h2>
+              <p className="mx-auto mb-6 max-w-sm text-sm text-gray-400">
+                Check the message above, make sure the API server is running with a Gemini key, then
+                try again.
+              </p>
+              <button
+                type="button"
+                onClick={() => startQuestionnaire()}
+                className="inline-flex min-h-[44px] items-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                Try again
+              </button>
+            </div>
+          )}
         </div>
       )}
 

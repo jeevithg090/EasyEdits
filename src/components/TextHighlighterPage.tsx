@@ -579,13 +579,16 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <button
-            onClick={onBack}
-            className="text-gray-500 hover:text-white text-sm mb-2 transition-colors flex items-center"
-          >
-            ← Back to Categories
+          <button onClick={onBack} type="button" className="back-link group mb-2">
+            <span
+              aria-hidden="true"
+              className="mr-2 transition-transform group-hover:-translate-x-1"
+            >
+              ←
+            </span>
+            All studios
           </button>
-          <h1 className="text-3xl font-bold text-white flex items-center">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
             <Highlighter className="w-8 h-8 mr-3 text-yellow-400" />
             Text Highlighter
             <span className="ml-3 px-2 py-1 rounded text-xs font-medium bg-brand-500/20 text-brand-300 border border-brand-500/20">
@@ -617,11 +620,11 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
               onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center cursor-pointer transition-all hover:border-gray-500"
             >
-              <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <ImageIcon className="w-12 h-12 text-gray-500 mx-auto mb-3" />
               <p className="text-gray-400 text-sm mb-1">
                 Drag & drop images here, or click to browse
               </p>
-              <p className="text-gray-600 text-xs">PNG, JPG, WEBP up to 10MB (max 10 images)</p>
+              <p className="text-gray-500 text-xs">PNG, JPG, WEBP up to 10MB (max 10 images)</p>
             </div>
 
             <input
@@ -663,16 +666,20 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
 
           {/* Text Input */}
           <div className="glass-card p-6 rounded-2xl">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              htmlFor="texthighlighter-text-to-highlight"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
               Text to Highlight
             </label>
             <textarea
+              id="texthighlighter-text-to-highlight"
               className="w-full bg-black/40 border border-gray-700 rounded-xl p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all resize-none h-24"
               placeholder="Paste the exact text from the image that you want to highlight..."
               value={targetText}
               onChange={(e) => setTargetText(e.target.value)}
             />
-            <p className="text-gray-600 text-xs mt-2">
+            <p className="text-gray-500 text-xs mt-2">
               Tip: Copy the text exactly as it appears in the image
             </p>
           </div>
@@ -704,11 +711,15 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
 
             {/* Duration Slider */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center">
+              <label
+                htmlFor="texthighlighter-animation-speed"
+                className="block text-sm font-medium text-gray-300 mb-3 flex items-center"
+              >
                 <Clock className="w-4 h-4 mr-2" />
                 Animation Speed: {duration.toFixed(1)}s per line
               </label>
               <input
+                id="texthighlighter-animation-speed"
                 type="range"
                 min="0.2"
                 max="1.0"
@@ -717,7 +728,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                 onChange={(e) => setDuration(parseFloat(e.target.value))}
                 className="w-full accent-brand-500"
               />
-              <div className="flex justify-between text-xs text-gray-600 mt-1">
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>Fast</span>
                 <span>Slow</span>
               </div>
@@ -739,7 +750,10 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
         {/* Output Section */}
         <div className="lg:col-span-7">
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+            <div
+              role="alert"
+              className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+            >
               <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-red-400 font-medium">Error</p>
@@ -772,7 +786,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-gray-600 text-sm mt-2">{progress}%</p>
+              <p className="text-gray-500 text-sm mt-2">{progress}%</p>
             </div>
           )}
 
@@ -799,7 +813,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                     </div>
                     <button
                       onClick={() => handleDownload(result.videoPath, result.outputVideo)}
-                      className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-medium flex items-center transition-colors"
+                      className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium flex items-center transition-colors"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download
@@ -829,11 +843,15 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
 
         {/* Topic Input */}
         <div className="glass-card p-6 rounded-2xl mb-6">
-          <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+          <label
+            htmlFor="texthighlighter-content-topic"
+            className="block text-sm font-medium text-gray-300 mb-2 flex items-center"
+          >
             <MessageSquare className="w-4 h-4 mr-2" />
             What content do you want to create?
           </label>
           <input
+            id="texthighlighter-content-topic"
             type="text"
             className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
             placeholder="e.g., AI assistants revolutionizing healthcare in 2024"
@@ -865,7 +883,10 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
 
         {/* Error Display */}
         {contentError && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+          <div
+            role="alert"
+            className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+          >
             <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-red-400 font-medium">Error</p>
@@ -1185,7 +1206,10 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Voice Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+              <label
+                htmlFor="texthighlighter-select-voice"
+                className="block text-sm font-medium text-gray-300 mb-2 flex items-center"
+              >
                 <Volume2 className="w-4 h-4 mr-2" />
                 Select Voice
               </label>
@@ -1195,6 +1219,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                 </div>
               ) : (
                 <select
+                  id="texthighlighter-select-voice"
                   value={selectedVoice}
                   onChange={(e) => setSelectedVoice(e.target.value)}
                   className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
@@ -1225,7 +1250,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                     onClick={() => setAudioSpeed(speed.key)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                       audioSpeed === speed.key
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-green-700 text-white'
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
@@ -1233,7 +1258,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                   </button>
                 ))}
               </div>
-              <p className="text-gray-600 text-xs mt-2">
+              <p className="text-gray-500 text-xs mt-2">
                 {SPEED_OPTIONS.find((s) => s.key === audioSpeed)?.description}
               </p>
             </div>
@@ -1255,7 +1280,10 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
 
           {/* Error Display */}
           {audioError && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+            <div
+              role="alert"
+              className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+            >
               <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-red-400 font-medium">Error</p>
@@ -1290,7 +1318,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                     a.download = generatedAudio.filename;
                     a.click();
                   }}
-                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium flex items-center transition-colors"
+                  className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white rounded-lg text-sm font-medium flex items-center transition-colors"
                 >
                   <Download className="w-4 h-4 mr-1" />
                   Download
@@ -1377,7 +1405,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                 onClick={() => setBrollSearchType('videos')}
                 className={`px-4 py-2 text-sm font-medium transition-all flex items-center ${
                   brollSearchType === 'videos'
-                    ? 'bg-cyan-500 text-white'
+                    ? 'bg-cyan-700 text-white'
                     : 'bg-black/20 text-gray-400 hover:text-white'
                 }`}
               >
@@ -1388,7 +1416,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                 onClick={() => setBrollSearchType('photos')}
                 className={`px-4 py-2 text-sm font-medium transition-all flex items-center ${
                   brollSearchType === 'photos'
-                    ? 'bg-cyan-500 text-white'
+                    ? 'bg-cyan-700 text-white'
                     : 'bg-black/20 text-gray-400 hover:text-white'
                 }`}
               >
@@ -1400,7 +1428,10 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
 
           {/* Error Display */}
           {brollError && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+            <div
+              role="alert"
+              className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+            >
               <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-red-400 font-medium">Error</p>
@@ -1453,7 +1484,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
                     <button
                       onClick={() => handleDownloadBroll(item)}
                       disabled={downloadingIds.has(item.id)}
-                      className="w-full px-3 py-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 text-white rounded-lg text-sm font-medium flex items-center justify-center transition-colors"
+                      className="w-full px-3 py-2 bg-cyan-700 hover:bg-cyan-600 disabled:bg-gray-600 text-white rounded-lg text-sm font-medium flex items-center justify-center transition-colors"
                     >
                       {downloadingIds.has(item.id) ? (
                         <RefreshCw className="w-4 h-4 animate-spin" />

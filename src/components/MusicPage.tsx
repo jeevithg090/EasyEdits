@@ -587,14 +587,14 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-white text-sm mb-4 transition-colors flex items-center group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Categories
+        <button onClick={onBack} type="button" className="back-link group mb-4">
+          <ArrowLeft
+            className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            aria-hidden="true"
+          />
+          All studios
         </button>
-        <h1 className="text-4xl font-bold text-white flex items-center">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
           <Music2 className="w-10 h-10 mr-3 text-pink-400" />
           Music Studio
           <span className="ml-3 px-3 py-1 rounded-full text-xs font-medium bg-pink-500/20 text-pink-300 border border-pink-500/20">
@@ -610,14 +610,22 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
       <div className="mb-8 flex flex-wrap gap-4">
         <button
           onClick={() => setShowContentResources(true)}
-          className="px-6 py-3 rounded-xl font-medium text-sm bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-400 hover:to-purple-500 shadow-lg shadow-pink-500/25 transition-all flex items-center"
+          className="px-6 py-3 rounded-xl font-medium text-sm bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-500 hover:to-purple-500 shadow-lg shadow-pink-500/25 transition-all flex items-center"
         >
           <Video className="w-4 h-4 mr-2" />
           Content Resources
         </button>
-        <div className="flex items-center gap-3 ml-auto">
-          <span className="text-gray-400 text-sm">AI Features:</span>
+        <div
+          role="group"
+          aria-labelledby="music-ai-features"
+          className="flex flex-wrap items-center gap-2 sm:gap-3 sm:ml-auto"
+        >
+          <span id="music-ai-features" className="text-gray-400 text-sm">
+            AI Features:
+          </span>
           <button
+            type="button"
+            aria-pressed={aiFeatures.beatSync}
             onClick={() => setAiFeatures((prev) => ({ ...prev, beatSync: !prev.beatSync }))}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${
               aiFeatures.beatSync
@@ -629,6 +637,8 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
             Beat Sync
           </button>
           <button
+            type="button"
+            aria-pressed={aiFeatures.autoEnhance}
             onClick={() => setAiFeatures((prev) => ({ ...prev, autoEnhance: !prev.autoEnhance }))}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${
               aiFeatures.autoEnhance
@@ -640,6 +650,8 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
             Auto Enhance
           </button>
           <button
+            type="button"
+            aria-pressed={aiFeatures.smartFilter}
             onClick={() => setAiFeatures((prev) => ({ ...prev, smartFilter: !prev.smartFilter }))}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${
               aiFeatures.smartFilter
@@ -655,11 +667,19 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+        <div
+          role="alert"
+          className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+        >
           <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
           <p className="text-red-300 text-sm">{error}</p>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-4 h-4 text-red-400" />
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="ml-auto -m-2 p-2 rounded-lg"
+            aria-label="Dismiss error"
+          >
+            <X className="w-4 h-4 text-red-400" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -705,7 +725,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
                     <Music2 className="w-8 h-8 text-gray-700" />
                   </div>
                   <p className="text-gray-400 font-medium text-sm">No video loaded</p>
-                  <p className="text-gray-600 text-xs mt-1">
+                  <p className="text-gray-500 text-xs mt-1">
                     Click "Content Resources" to add a video
                   </p>
                 </div>
@@ -801,7 +821,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
                   className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center ${
                     isProcessing
                       ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-400 hover:to-purple-500 shadow-lg shadow-pink-500/25'
+                      : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-500 hover:to-purple-500 shadow-lg shadow-pink-500/25'
                   }`}
                 >
                   {isProcessing ? (
@@ -887,10 +907,14 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
             {/* Intensity Slider */}
             {selectedFilter && (
               <div className="pt-4 border-t border-white/10">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  htmlFor="music-filter-intensity"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
                   Filter Intensity: {filterIntensity}%
                 </label>
                 <input
+                  id="music-filter-intensity"
                   type="range"
                   min="0"
                   max="100"
@@ -936,10 +960,14 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
               <div className="space-y-4 pt-4 border-t border-white/10">
                 {/* Caption Text */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="music-caption-text"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Caption Text
                   </label>
                   <textarea
+                    id="music-caption-text"
                     value={captionText}
                     onChange={(e) => setCaptionText(e.target.value)}
                     className="w-full bg-black/40 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition-all resize-none"
@@ -950,9 +978,15 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
 
                 {/* Font Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Font</label>
+                  <label
+                    htmlFor="music-font"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Font
+                  </label>
                   <div className="relative">
                     <select
+                      id="music-font"
                       value={captionFont}
                       onChange={(e) => setCaptionFont(e.target.value)}
                       className="w-full bg-black/40 border border-gray-700 rounded-xl p-3 text-white appearance-none cursor-pointer"
@@ -1012,10 +1046,14 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
 
                 {/* Size Slider */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="music-font-size-px"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Font Size: {captionSize}px
                   </label>
                   <input
+                    id="music-font-size-px"
                     type="range"
                     min="24"
                     max="72"
@@ -1057,7 +1095,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
               <a
                 href={processedVideoPath}
                 download
-                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-400 hover:to-purple-500 shadow-lg shadow-pink-500/25 flex items-center justify-center"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-500 hover:to-purple-500 shadow-lg shadow-pink-500/25 flex items-center justify-center"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Video
@@ -1098,11 +1136,15 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
                 will be automatically cropped to 9:16 for vertical format.
               </p>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                <label
+                  htmlFor="music-video-url"
+                  className="block text-sm font-medium text-gray-300 mb-2 flex items-center"
+                >
                   <Link className="w-4 h-4 mr-2" />
                   Video URL
                 </label>
                 <input
+                  id="music-video-url"
                   type="text"
                   className="w-full bg-black/40 border border-gray-700 rounded-xl p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
                   placeholder="https://youtube.com/shorts/... or https://instagram.com/reel/..."
@@ -1121,7 +1163,7 @@ export const MusicPage: React.FC<MusicPageProps> = ({ onBack }) => {
                 className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center ${
                   !videoUrl || isDownloading
                     ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-400 hover:to-purple-500 shadow-lg shadow-pink-500/25'
+                    : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-500 hover:to-purple-500 shadow-lg shadow-pink-500/25'
                 }`}
               >
                 {isDownloading ? (
