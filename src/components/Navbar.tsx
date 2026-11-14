@@ -16,32 +16,31 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
     onNavigate('HOME');
     // Wait for the home view to render before scrolling to the section.
     requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      });
     });
   };
 
   return (
-    <nav
-      aria-label="Main"
-      className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/50 backdrop-blur-lg"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-surface/70 backdrop-blur-lg">
+      <nav aria-label="Main" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => onNavigate('HOME')}
-            className="flex items-center space-x-2 group"
+            className="group -ml-1 flex items-center gap-2 rounded-lg p-1"
             aria-label="Easy Edits home"
           >
-            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center group-hover:bg-brand-400 transition-colors">
-              <Video className="w-5 h-5 text-white" aria-hidden="true" />
-            </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-pink-500 shadow-lg shadow-brand-500/20 transition-transform group-hover:scale-105">
+              <Video className="h-5 w-5 text-white" aria-hidden="true" />
+            </span>
+            <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-lg font-bold text-transparent sm:text-xl">
               Easy Edits
             </span>
           </button>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             {sectionLinks.map((link) => (
               <a
                 key={link.id}
@@ -50,14 +49,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
                   event.preventDefault();
                   goToSection(link.id);
                 }}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="inline-flex min-h-[44px] items-center rounded-lg px-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white sm:px-3"
               >
                 {link.label}
               </a>
             ))}
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 };
