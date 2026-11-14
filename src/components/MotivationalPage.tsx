@@ -703,14 +703,14 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-white text-sm mb-4 transition-colors flex items-center group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Categories
+        <button onClick={onBack} type="button" className="back-link group mb-4">
+          <ArrowLeft
+            className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            aria-hidden="true"
+          />
+          All studios
         </button>
-        <h1 className="text-4xl font-bold text-white flex items-center">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
           <Sparkles className={`w-10 h-10 mr-3 ${accentClasses.text}`} />
           Motivational Studio
           <span
@@ -726,7 +726,10 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+        <div
+          role="alert"
+          className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+        >
           <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
           <p className="text-red-300 text-sm">{error}</p>
           <button onClick={() => setError(null)} className="ml-auto">
@@ -1068,9 +1071,15 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
             {/* Voice Selection */}
             <div className="mb-4">
-              <label className="block text-gray-400 text-sm mb-2">Select Voice</label>
+              <label
+                htmlFor="motivational-select-voice"
+                className="block text-gray-400 text-sm mb-2"
+              >
+                Select Voice
+              </label>
               <div className="relative">
                 <select
+                  id="motivational-select-voice"
                   value={selectedVoice}
                   onChange={(e) => setSelectedVoice(e.target.value)}
                   className="w-full bg-black/40 border border-gray-700 rounded-xl p-3 text-white appearance-none cursor-pointer"
@@ -1192,8 +1201,14 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
-                    <label className="block text-gray-400 text-xs mb-1">Start Time</label>
+                    <label
+                      htmlFor="motivational-start-time"
+                      className="block text-gray-400 text-xs mb-1"
+                    >
+                      Start Time
+                    </label>
                     <input
+                      id="motivational-start-time"
                       type="text"
                       value={brollStartTime}
                       onChange={(e) => setBrollStartTime(e.target.value)}
@@ -1202,8 +1217,14 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 text-xs mb-1">End Time</label>
+                    <label
+                      htmlFor="motivational-end-time"
+                      className="block text-gray-400 text-xs mb-1"
+                    >
+                      End Time
+                    </label>
                     <input
+                      id="motivational-end-time"
                       type="text"
                       value={brollEndTime}
                       onChange={(e) => setBrollEndTime(e.target.value)}
@@ -1343,7 +1364,7 @@ export const MotivationalPage: React.FC<MotivationalPageProps> = ({ onBack }) =>
                                 onClick={() => toggleClipApproval(idx)}
                                 className={`p-1.5 rounded-lg transition-all ${
                                   isApproved
-                                    ? 'bg-green-500 text-white'
+                                    ? 'bg-green-700 text-white'
                                     : 'bg-white/10 text-gray-400 hover:text-white hover:bg-white/20'
                                 }`}
                                 title={isApproved ? 'Approved' : 'Approve'}

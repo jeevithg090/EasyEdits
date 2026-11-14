@@ -781,14 +781,14 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-white text-sm mb-4 transition-colors flex items-center group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Categories
+        <button onClick={onBack} type="button" className="back-link group mb-4">
+          <ArrowLeft
+            className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            aria-hidden="true"
+          />
+          All studios
         </button>
-        <h1 className="text-4xl font-bold text-white flex items-center">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
           Podcast Studio
           <span className="ml-3 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/20">
             Beta
@@ -801,58 +801,75 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
       {/* Mode Toggle */}
       <div className="mb-8">
-        <div className="inline-flex p-1 rounded-xl bg-white/5 border border-white/10">
-          <button
-            onClick={() => setMode('local')}
-            className={`flex items-center px-6 py-3 rounded-lg font-medium text-sm transition-all ${
-              mode === 'local'
-                ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/25'
-                : 'text-gray-400 hover:text-white'
-            }`}
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            role="group"
+            aria-label="Processing mode"
+            className="inline-flex max-w-full p-1 rounded-xl bg-white/5 border border-white/10"
           >
-            <Monitor className="w-4 h-4 mr-2" />
-            Run Locally
-          </button>
-          <button
-            onClick={() => setMode('colab')}
-            className={`flex items-center px-6 py-3 rounded-lg font-medium text-sm transition-all relative ${
-              mode === 'colab'
-                ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg shadow-orange-500/25'
-                : isCloudAvailable
-                  ? 'text-gray-400 hover:text-white'
-                  : 'text-gray-600 cursor-not-allowed'
-            }`}
-            disabled={!isCloudAvailable && !isCheckingCloud}
-          >
-            <Cpu className="w-4 h-4 mr-2" />
-            Google Colab
-            {isCheckingCloud && <Loader2 className="w-3 h-3 ml-1 animate-spin" />}
-            {!isCloudAvailable && !isCheckingCloud && (
+            <button
+              type="button"
+              aria-pressed={mode === 'local'}
+              onClick={() => setMode('local')}
+              className={`flex items-center whitespace-nowrap px-3 sm:px-6 py-3 rounded-lg text-[13px] sm:text-sm font-medium text-sm transition-all ${
+                mode === 'local'
+                  ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-500/25'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Monitor className="hidden sm:block w-4 h-4 mr-2" aria-hidden="true" />
+              Run Locally
+            </button>
+            <button
+              type="button"
+              aria-pressed={mode === 'colab'}
+              title={
+                !isCloudAvailable && !isCheckingCloud
+                  ? 'Configure Cloudflare R2 and Firebase to enable Colab mode'
+                  : undefined
+              }
+              onClick={() => setMode('colab')}
+              className={`flex items-center whitespace-nowrap px-3 sm:px-6 py-3 rounded-lg text-[13px] sm:text-sm font-medium text-sm transition-all relative ${
+                mode === 'colab'
+                  ? 'bg-gradient-to-r from-orange-700 to-yellow-700 text-white shadow-lg shadow-orange-500/25'
+                  : isCloudAvailable
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-500 cursor-not-allowed'
+              }`}
+              disabled={!isCloudAvailable && !isCheckingCloud}
+            >
+              <Cpu className="hidden sm:block w-4 h-4 mr-2" aria-hidden="true" />
+              Google Colab
+              {isCheckingCloud && <Loader2 className="w-3 h-3 ml-1 animate-spin" />}
+              {!isCloudAvailable && !isCheckingCloud && (
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  Configure R2 & Firebase
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Coming soon"
+              className="flex items-center whitespace-nowrap px-3 sm:px-6 py-3 rounded-lg text-[13px] sm:text-sm font-medium text-sm text-gray-500 cursor-not-allowed relative group"
+            >
+              <Cloud className="hidden sm:block w-4 h-4 mr-2" aria-hidden="true" />
+              Cloud
               <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                Configure R2 & Firebase
+                Coming Soon
               </span>
-            )}
-          </button>
+            </button>
+          </div>
+          {/* Content Resources Button */}
           <button
-            onClick={() => {}}
-            disabled
-            className="flex items-center px-6 py-3 rounded-lg font-medium text-sm text-gray-600 cursor-not-allowed relative group"
+            onClick={() => setShowContentResources(true)}
+            type="button"
+            className="px-4 py-3 rounded-xl font-medium text-sm bg-gradient-to-r from-violet-600 to-purple-700 text-white hover:from-violet-500 hover:to-purple-600 shadow-lg shadow-violet-500/25 transition-all flex items-center"
           >
-            <Cloud className="w-4 h-4 mr-2" />
-            Cloud
-            <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              Coming Soon
-            </span>
+            <Video className="w-4 h-4 mr-2" aria-hidden="true" />
+            Content Resources
           </button>
         </div>
-        {/* Content Resources Button */}
-        <button
-          onClick={() => setShowContentResources(true)}
-          className="ml-4 px-4 py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-400 hover:to-purple-500 shadow-lg shadow-violet-500/25 transition-all flex items-center"
-        >
-          <Video className="w-4 h-4 mr-2" />
-          Content Resources
-        </button>
         {mode === 'colab' && (
           <p className="text-orange-400 text-sm mt-2 flex items-center">
             <Cpu className="w-4 h-4 mr-1" />
@@ -867,11 +884,15 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         <div className="space-y-6">
           {/* YouTube URL Input */}
           <div className="glass-card p-6 rounded-2xl">
-            <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center">
+            <label
+              htmlFor="podcast-youtube-video-url"
+              className="block text-sm font-medium text-gray-300 mb-3 flex items-center"
+            >
               <Youtube className="w-4 h-4 mr-2 text-red-500" />
               YouTube Video URL
             </label>
             <input
+              id="podcast-youtube-video-url"
               type="text"
               className={`w-full bg-black/40 border rounded-xl p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all ${
                 youtubeUrl && !isValidYoutubeUrl(youtubeUrl)
@@ -898,8 +919,11 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-2">Start Time</label>
+                <label htmlFor="podcast-start-time" className="block text-xs text-gray-500 mb-2">
+                  Start Time
+                </label>
                 <input
+                  id="podcast-start-time"
                   type="text"
                   className="w-full bg-black/40 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all text-center font-mono text-sm"
                   placeholder="00:00:00"
@@ -908,8 +932,11 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-2">End Time</label>
+                <label htmlFor="podcast-end-time" className="block text-xs text-gray-500 mb-2">
+                  End Time
+                </label>
                 <input
+                  id="podcast-end-time"
                   type="text"
                   className="w-full bg-black/40 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all text-center font-mono text-sm"
                   placeholder="00:00:30"
@@ -923,12 +950,16 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
           {/* Aspect Ratio Selector */}
           <div className="glass-card p-6 rounded-2xl">
-            <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center">
+            <label
+              htmlFor="podcast-output-aspect-ratio"
+              className="block text-sm font-medium text-gray-300 mb-3 flex items-center"
+            >
               <Crop className="w-4 h-4 mr-2 text-purple-400" />
               Output Aspect Ratio
             </label>
             <div className="relative">
               <select
+                id="podcast-output-aspect-ratio"
                 value={aspectRatio}
                 onChange={(e) => setAspectRatio(e.target.value)}
                 className="w-full bg-black/40 border border-gray-700 rounded-xl p-4 text-white appearance-none cursor-pointer focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
@@ -945,7 +976,10 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
           {/* Error Display */}
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start">
+            <div
+              role="alert"
+              className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start"
+            >
               <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
               <p className="text-red-300 text-sm">{error}</p>
             </div>
@@ -959,8 +993,8 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
               isDownloading || !youtubeUrl
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 : mode === 'colab'
-                  ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white hover:from-orange-400 hover:to-yellow-400 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40'
-                  : 'bg-gradient-to-r from-brand-500 to-purple-500 text-white hover:from-brand-400 hover:to-purple-400 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40'
+                  ? 'bg-gradient-to-r from-orange-700 to-yellow-700 text-white hover:from-orange-600 hover:to-yellow-600 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40'
+                  : 'bg-gradient-to-r from-brand-600 to-pink-600 text-white hover:from-brand-500 hover:to-pink-500 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40'
             }`}
           >
             {isDownloading ? (
@@ -987,7 +1021,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 className={`h-full transition-all duration-300 ${
                   mode === 'colab'
                     ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
-                    : 'bg-gradient-to-r from-brand-500 to-purple-500'
+                    : 'bg-gradient-to-r from-brand-600 to-pink-600'
                 }`}
                 style={{ width: `${downloadProgress}%` }}
               />
@@ -1065,7 +1099,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center ${
                   isAutocropping
                     ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-400 hover:to-pink-400 shadow-lg shadow-purple-500/25'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/25'
                 }`}
               >
                 {isAutocropping ? (
@@ -1126,7 +1160,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                   <Crop className="w-8 h-8 text-gray-700" />
                 </div>
                 <p className="text-gray-400 font-medium text-sm">No cropped video yet</p>
-                <p className="text-gray-600 text-xs mt-1">Download a video then click Autocrop</p>
+                <p className="text-gray-500 text-xs mt-1">Download a video then click Autocrop</p>
               </div>
             )}
           </div>
@@ -1137,7 +1171,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
               <a
                 href={croppedVideoPath}
                 download
-                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-400 hover:to-emerald-400 shadow-lg shadow-green-500/25 flex items-center justify-center"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 text-white hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/25 flex items-center justify-center"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Cropped Video
@@ -1147,7 +1181,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
               {mode === 'colab' && transcription && (
                 <button
                   onClick={() => setShowTranscription(true)}
-                  className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-400 hover:to-indigo-400 shadow-lg shadow-blue-500/25 flex items-center justify-center"
+                  className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 flex items-center justify-center"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   View Transcriptions
@@ -1162,7 +1196,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                   className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center ${
                     isGeneratingCaptions
                       ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-400 hover:to-rose-400 shadow-lg shadow-pink-500/25'
+                      : 'bg-gradient-to-r from-pink-600 to-rose-600 text-white hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-500/25'
                   }`}
                 >
                   {isGeneratingCaptions ? (
@@ -1187,7 +1221,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                   className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center ${
                     isGeneratingImagePrompts || isGeneratingImages || isCreatingSplitVideo
                       ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-400 hover:to-fuchsia-400 shadow-lg shadow-violet-500/25'
+                      : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/25'
                   }`}
                 >
                   {isGeneratingImagePrompts || isGeneratingImages || isCreatingSplitVideo ? (
@@ -1275,7 +1309,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
               <a
                 href={captionedVideoPath}
                 download
-                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-400 hover:to-rose-400 shadow-lg shadow-pink-500/25 flex items-center justify-center"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 text-white hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-500/25 flex items-center justify-center"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Captioned Video
@@ -1312,7 +1346,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
               <a
                 href={splitVideoPath}
                 download
-                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-400 hover:to-fuchsia-400 shadow-lg shadow-violet-500/25 flex items-center justify-center"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/25 flex items-center justify-center"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Split-Screen Video
@@ -1608,10 +1642,14 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
                   {/* Words Per Segment */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                    <label
+                      htmlFor="podcast-words-per-caption-line"
+                      className="block text-sm font-medium text-gray-300 mb-3"
+                    >
                       Words Per Caption Line: {captionSettings.wordsPerSegment}
                     </label>
                     <input
+                      id="podcast-words-per-caption-line"
                       type="range"
                       min="2"
                       max="8"
@@ -1664,10 +1702,14 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                     </div>
                     {captionSettings.position === 'custom' && (
                       <div className="mt-2">
-                        <label className="block text-xs text-gray-400 mb-2">
+                        <label
+                          htmlFor="podcast-vertical-position-from-top"
+                          className="block text-xs text-gray-400 mb-2"
+                        >
                           Vertical Position: {captionSettings.customPositionY}% from top
                         </label>
                         <input
+                          id="podcast-vertical-position-from-top"
                           type="range"
                           min="10"
                           max="90"
@@ -1692,7 +1734,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 <div className="p-4 border-t border-white/10 bg-black/20">
                   <button
                     onClick={handleGenerateCaptions}
-                    className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-400 hover:to-rose-400 shadow-lg shadow-pink-500/25 flex items-center justify-center"
+                    className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 text-white hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-500/25 flex items-center justify-center"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     Generate Subtitles with These Settings
@@ -1792,7 +1834,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             <div className="p-4 border-t border-white/10 bg-black/20">
               <button
                 onClick={handleAddImagesToVideo}
-                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-400 hover:to-fuchsia-400 shadow-lg shadow-violet-500/25 flex items-center justify-center"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/25 flex items-center justify-center"
               >
                 <Wand2 className="w-4 h-4 mr-2" />
                 Generate Images & Create Video
@@ -1824,11 +1866,15 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 meme videos with black/white backgrounds.
               </p>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                <label
+                  htmlFor="podcast-video-url"
+                  className="block text-sm font-medium text-gray-300 mb-2 flex items-center"
+                >
                   <Link className="w-4 h-4 mr-2" />
                   Video URL
                 </label>
                 <input
+                  id="podcast-video-url"
                   type="text"
                   className="w-full bg-black/40 border border-gray-700 rounded-xl p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                   placeholder="https://www.instagram.com/reel/..."
@@ -1847,7 +1893,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center ${
                   !contentVideoUrl || isContentCropping
                     ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-400 hover:to-purple-500 shadow-lg shadow-violet-500/25'
+                    : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/25'
                 }`}
               >
                 {isContentCropping ? (
@@ -1890,7 +1936,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
               <a
                 href={contentCroppedVideoPath}
                 download
-                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-400 hover:to-purple-500 shadow-lg shadow-violet-500/25 flex items-center justify-center"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/25 flex items-center justify-center"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Video
@@ -1963,7 +2009,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                   </div>
                   <div className="p-2">
                     <p className="text-xs text-gray-400 truncate">{video.filename}</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-500">
                       {(video.size / 1024 / 1024).toFixed(1)} MB
                     </p>
                   </div>

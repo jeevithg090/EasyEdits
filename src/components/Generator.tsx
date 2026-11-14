@@ -87,13 +87,16 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <button
-            onClick={onBack}
-            className="text-gray-500 hover:text-white text-sm mb-2 transition-colors flex items-center"
-          >
-            ← Back to Categories
+          <button onClick={onBack} type="button" className="back-link group mb-2">
+            <span
+              aria-hidden="true"
+              className="mr-2 transition-transform group-hover:-translate-x-1"
+            >
+              ←
+            </span>
+            All studios
           </button>
-          <h1 className="text-3xl font-bold text-white flex items-center">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
             {category} Generator
             <span className="ml-3 px-2 py-1 rounded text-xs font-medium bg-brand-500/20 text-brand-300 border border-brand-500/20">
               AI Powered
@@ -121,17 +124,23 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
               onChange={(e) => setTopic(e.target.value)}
             />
 
-            <label className="block text-sm font-medium text-gray-300 mt-6 mb-2">Select Tone</label>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Tone">
+            <div className="mt-1.5 flex justify-end text-xs text-gray-500" aria-live="polite">
+              {topic.length}/500
+            </div>
+
+            <p id="generator-tone" className="block text-sm font-medium text-gray-300 mt-4 mb-2">
+              Select Tone
+            </p>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="generator-tone">
               {tones.map((t) => (
                 <button
                   key={t}
                   type="button"
                   aria-pressed={tone === t}
                   onClick={() => setTone(t)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`min-h-[36px] px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
                     tone === t
-                      ? 'bg-brand-500 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >
@@ -176,22 +185,45 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
 
         {/* Output Section */}
         <div className="lg:col-span-8">
-          {!scriptData ? (
-            <div className="h-full min-h-[500px] flex flex-col items-center justify-center glass-card rounded-2xl p-12 text-center border-dashed border-2 border-gray-800">
+          {isGenerating ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="glass-card rounded-2xl p-6 sm:p-8 space-y-6 min-h-[320px] lg:min-h-[500px]"
+            >
+              <span className="sr-only">Generating your script…</span>
+              {[40, 90, 75, 85, 60].map((width, index) => (
+                <div key={index} className="space-y-3" aria-hidden="true">
+                  <div className="h-3 w-24 rounded bg-white/10 animate-pulse" />
+                  <div
+                    className="h-4 rounded bg-white/5 animate-pulse"
+                    style={{ width: `${width}%` }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : !scriptData ? (
+            <div className="h-full min-h-[320px] lg:min-h-[500px] flex flex-col items-center justify-center glass-card rounded-2xl p-8 sm:p-12 text-center border-dashed border-2 border-gray-800">
               <div className="w-20 h-20 rounded-full bg-gray-900 flex items-center justify-center mb-6">
-                <Sparkles className="w-10 h-10 text-gray-700" />
+                <Sparkles className="w-10 h-10 text-gray-500" aria-hidden="true" />
               </div>
               <h3 className="text-xl font-medium text-gray-300 mb-2">Ready to Create?</h3>
               <p className="text-gray-500 max-w-md">
-                Enter your topic on the left and hit generate. We'll craft the perfect script,
+                Describe your topic, pick a tone and hit generate. We'll craft the perfect script,
                 hooks, and visual direction for you.
               </p>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Tabs */}
-              <div className="flex space-x-2 border-b border-gray-800 pb-1">
+              <div
+                className="flex space-x-2 border-b border-gray-800 pb-1"
+                role="group"
+                aria-label="Result view"
+              >
                 <button
+                  type="button"
+                  aria-pressed={activeTab === 'script'}
                   onClick={() => setActiveTab('script')}
                   className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors flex items-center ${
                     activeTab === 'script'
@@ -199,10 +231,12 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
                       : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <FileText className="w-4 h-4 mr-2" aria-hidden="true" />
                   Script & Plan
                 </button>
                 <button
+                  type="button"
+                  aria-pressed={activeTab === 'visuals'}
                   onClick={() => setActiveTab('visuals')}
                   className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors flex items-center ${
                     activeTab === 'visuals'
@@ -210,7 +244,7 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
                       : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
-                  <ImageIcon className="w-4 h-4 mr-2" />
+                  <ImageIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                   Visual Concepts
                 </button>
               </div>

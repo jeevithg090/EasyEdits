@@ -292,14 +292,14 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-white text-sm mb-4 transition-colors flex items-center group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Categories
+        <button onClick={onBack} type="button" className="back-link group mb-4">
+          <ArrowLeft
+            className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            aria-hidden="true"
+          />
+          All studios
         </button>
-        <h1 className="text-4xl font-bold text-white flex items-center">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex flex-wrap items-center gap-y-2">
           Sports Studio
           <span className="ml-3 px-3 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-300 border border-orange-500/20">
             Beta
@@ -312,7 +312,10 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 flex items-center">
+        <div
+          role="alert"
+          className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 flex items-center"
+        >
           <XCircle className="w-5 h-5 mr-2 flex-shrink-0" />
           {error}
         </div>
@@ -343,7 +346,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
               <button
                 onClick={handleDownloadVideo}
                 disabled={isDownloadingVideo || !videoUrl}
-                className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-medium hover:from-orange-400 hover:to-red-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 px-4 bg-gradient-to-r from-orange-700 to-red-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-red-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isDownloadingVideo ? (
                   <>
@@ -397,7 +400,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
                 <button
                   onClick={handleGetAiSuggestions}
                   disabled={isGettingAiSuggestions || !videoFilename}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-700 to-orange-700 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isGettingAiSuggestions ? (
                     <>
@@ -465,7 +468,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
                 <button
                   onClick={handleAnalyzeMusic}
                   disabled={isAnalyzingMusic || !musicUrl}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:from-purple-400 hover:to-pink-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isAnalyzingMusic ? (
                     <>
@@ -569,7 +572,7 @@ export const SportsPage: React.FC<SportsPageProps> = ({ onBack }) => {
               <button
                 onClick={handleMerge}
                 disabled={isMerging}
-                className="w-full py-4 px-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg hover:from-green-400 hover:to-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-4 px-4 bg-gradient-to-r from-green-700 to-emerald-700 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isMerging ? (
                   <>
