@@ -30,12 +30,16 @@ You need two sets of credentials:
 3. Create a token with Object Read & Write permissions
 4. Copy: Access Key ID, Secret Access Key, Account ID, Bucket Name
 
+Store them as [Colab Secrets](https://colab.research.google.com/) (key icon in the
+left sidebar) named `FIREBASE_CREDENTIALS`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`,
+`R2_SECRET_ACCESS_KEY` and `R2_BUCKET_NAME`. Never paste keys into notebook cells.
+
 ### 2. Run the Setup Cells
 
 Run each cell in order. The notebook will:
 
 - Install required packages
-- Configure your credentials (stored in Colab's memory only)
+- Read your credentials from Colab Secrets
 - Start the worker loop
 
 ### 3. Keep the Notebook Running
@@ -71,29 +75,18 @@ if torch.cuda.is_available():
 import json
 from google.colab import userdata
 
-# Firebase Service Account Credentials (pre-configured)
-FIREBASE_CREDENTIALS = '''
-{
-  "type": "service_account",
-  "project_id": "easy-edits-db",
-  "private_key_id": "YOUR_PRIVATE_KEY_ID",
-  "private_key": "YOUR_PRIVATE_KEY",
-  "client_email": "firebase-adminsdk-fbsvc@easy-edits-db.iam.gserviceaccount.com",
-  "client_id": "100617687619216985225",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40easy-edits-db.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
-'''
+# Credentials are read from Colab's Secrets panel (key icon in the left sidebar).
+# Add these secrets and grant this notebook access to them:
+#   FIREBASE_CREDENTIALS  - the full Firebase service-account JSON
+#   R2_ENDPOINT           - https://<account-id>.r2.cloudflarestorage.com
+#   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME
+FIREBASE_CREDENTIALS = userdata.get('FIREBASE_CREDENTIALS')
 
-# Cloudflare R2 Credentials (pre-configured)
 R2_CONFIG = {
-    "endpoint": "https://e76131f443b24c78220363fc58fb3064.r2.cloudflarestorage.com",
-    "access_key_id": "YOUR_ACCESS_KEY_ID",
-    "secret_access_key": "YOUR_SECRET_ACCESS_KEY",
-    "bucket_name": "easy-edits"
+    "endpoint": userdata.get('R2_ENDPOINT'),
+    "access_key_id": userdata.get('R2_ACCESS_KEY_ID'),
+    "secret_access_key": userdata.get('R2_SECRET_ACCESS_KEY'),
+    "bucket_name": userdata.get('R2_BUCKET_NAME'),
 }
 
 # Parse Firebase credentials

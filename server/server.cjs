@@ -1642,6 +1642,10 @@ app.post('/api/create-content/script', async (req, res) => {
     return res.status(400).json({ error: 'Missing required field: topic' });
   }
 
+  if (!CONTENT_API_KEY) {
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured on the server' });
+  }
+
   console.log(`🎬 Create Content: Generating script for "${topic}"`);
   if (comment) console.log(`   With feedback: "${comment}"`);
 
@@ -1665,8 +1669,6 @@ app.post('/api/create-content/script', async (req, res) => {
         'script',
         '--topic',
         topic,
-        '--api_key',
-        CONTENT_API_KEY,
       ];
 
       if (comment && comment.trim()) {
@@ -1726,6 +1728,10 @@ app.post('/api/create-content/resources', async (req, res) => {
     return res.status(400).json({ error: 'Missing required field: topic' });
   }
 
+  if (!CONTENT_API_KEY) {
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured on the server' });
+  }
+
   console.log(`🔍 Create Content: Finding resources for "${topic}"`);
   if (comment) console.log(`   With feedback: "${comment}"`);
 
@@ -1748,8 +1754,6 @@ app.post('/api/create-content/resources', async (req, res) => {
         'resources',
         '--topic',
         topic,
-        '--api_key',
-        CONTENT_API_KEY,
       ];
 
       if (comment && comment.trim()) {
