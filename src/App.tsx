@@ -36,65 +36,63 @@ const categories = Object.values(ContentCategory);
 const features = [
   {
     icon: <Wand2 className="w-6 h-6" />,
-    title: "AI-Powered Scripts",
-    description: "Generate viral hooks, compelling narratives, and CTAs tailored to your niche",
-    gradient: "from-violet-500 to-purple-600"
+    title: 'AI-Powered Scripts',
+    description: 'Generate viral hooks, compelling narratives, and CTAs tailored to your niche',
+    gradient: 'from-violet-500 to-purple-600',
   },
   {
     icon: <Video className="w-6 h-6" />,
-    title: "Visual Cue Suggestions",
-    description: "Get shot-by-shot visual recommendations that match your script perfectly",
-    gradient: "from-pink-500 to-rose-600"
+    title: 'Visual Cue Suggestions',
+    description: 'Get shot-by-shot visual recommendations that match your script perfectly',
+    gradient: 'from-pink-500 to-rose-600',
   },
   {
     icon: <Layers className="w-6 h-6" />,
-    title: "Multi-Format Export",
-    description: "Export to TikTok, Reels, Shorts, or any platform-optimized format",
-    gradient: "from-cyan-500 to-blue-600"
+    title: 'Multi-Format Export',
+    description: 'Export to TikTok, Reels, Shorts, or any platform-optimized format',
+    gradient: 'from-cyan-500 to-blue-600',
   },
   {
     icon: <Zap className="w-6 h-6" />,
-    title: "Instant Generation",
-    description: "From idea to content-ready assets in under 30 seconds",
-    gradient: "from-amber-500 to-orange-600"
-  }
+    title: 'Instant Generation',
+    description: 'From idea to content-ready assets in under 30 seconds',
+    gradient: 'from-amber-500 to-orange-600',
+  },
 ];
-
-
 
 const categoryDescriptions: Record<ContentCategory, { tagline: string; features: string[] }> = {
   [ContentCategory.PODCAST]: {
-    tagline: "Create captioned clips that go viral",
-    features: ["Auto-captions", "Voice sync", "Multiple styles"]
+    tagline: 'Create captioned clips that go viral',
+    features: ['Auto-captions', 'Voice sync', 'Multiple styles'],
   },
   [ContentCategory.SPORTS]: {
-    tagline: "Epic sports edits with dynamic effects",
-    features: ["Beat sync", "Highlight reels", "Commentary overlays"]
+    tagline: 'Epic sports edits with dynamic effects',
+    features: ['Beat sync', 'Highlight reels', 'Commentary overlays'],
   },
   [ContentCategory.TECHNOLOGY]: {
-    tagline: "Tech reviews & tutorials that educate",
-    features: ["Text highlights", "Code snippets", "Screen recordings"]
+    tagline: 'Tech reviews & tutorials that educate',
+    features: ['Text highlights', 'Code snippets', 'Screen recordings'],
   },
   [ContentCategory.ENTERTAINMENT]: {
-    tagline: "Movie & TV content that engages",
-    features: ["Scene breakdowns", "Easter eggs", "Fan theories"]
+    tagline: 'Movie & TV content that engages',
+    features: ['Scene breakdowns', 'Easter eggs', 'Fan theories'],
   },
   [ContentCategory.EDUCATIONAL]: {
-    tagline: "Learn & teach with visual clarity",
-    features: ["Step-by-step", "Diagrams", "Quick tips"]
+    tagline: 'Learn & teach with visual clarity',
+    features: ['Step-by-step', 'Diagrams', 'Quick tips'],
   },
   [ContentCategory.MOTIVATIONAL]: {
-    tagline: "Inspire millions with powerful stories",
-    features: ["Quote overlays", "Cinematic B-roll", "Music sync"]
+    tagline: 'Inspire millions with powerful stories',
+    features: ['Quote overlays', 'Cinematic B-roll', 'Music sync'],
   },
   [ContentCategory.MUSIC]: {
-    tagline: "Audio-visual experiences that mesmerize",
-    features: ["Waveforms", "Lyrics sync", "Beat drops"]
+    tagline: 'Audio-visual experiences that mesmerize',
+    features: ['Waveforms', 'Lyrics sync', 'Beat drops'],
   },
   [ContentCategory.NEWS]: {
-    tagline: "Breaking news that informs instantly",
-    features: ["Ticker overlays", "Source cards", "Fact checks"]
-  }
+    tagline: 'Breaking news that informs instantly',
+    features: ['Ticker overlays', 'Source cards', 'Fact checks'],
+  },
 };
 
 const App: React.FC = () => {
@@ -174,7 +172,7 @@ const App: React.FC = () => {
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px'
+            backgroundSize: '80px 80px',
           }}
         />
       </div>
@@ -195,13 +193,20 @@ const App: React.FC = () => {
               </div>
 
               {/* Main Heading */}
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <h1
+                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-slide-up"
+                style={{ animationDelay: '0.1s' }}
+              >
                 <span className="block text-white/90">Create Content That</span>
                 <span className="relative inline-block mt-2">
                   <span className="bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent animate-gradient bg-300%">
                     Goes Viral
                   </span>
-                  <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
+                  <svg
+                    className="absolute -bottom-2 left-0 w-full"
+                    viewBox="0 0 300 12"
+                    fill="none"
+                  >
                     <path
                       d="M2 10C60 2 180 2 298 10"
                       stroke="url(#underline-gradient)"
@@ -221,15 +226,27 @@ const App: React.FC = () => {
               </h1>
 
               {/* Subheading */}
-              <p className="max-w-3xl mx-auto text-lg sm:text-xl md:text-2xl text-gray-400 mb-12 leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                Generate <span className="text-white font-medium">scripts</span>, <span className="text-white font-medium">visual cues</span>, and <span className="text-white font-medium">content blueprints</span> for
-                <span className="text-violet-400"> Podcasts</span>, <span className="text-pink-400">Sports</span>, <span className="text-cyan-400">News</span> & more — in seconds.
+              <p
+                className="max-w-3xl mx-auto text-lg sm:text-xl md:text-2xl text-gray-400 mb-12 leading-relaxed animate-slide-up"
+                style={{ animationDelay: '0.2s' }}
+              >
+                Generate <span className="text-white font-medium">scripts</span>,{' '}
+                <span className="text-white font-medium">visual cues</span>, and{' '}
+                <span className="text-white font-medium">content blueprints</span> for
+                <span className="text-violet-400"> Podcasts</span>,{' '}
+                <span className="text-pink-400">Sports</span>,{' '}
+                <span className="text-cyan-400">News</span> & more — in seconds.
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+              <div
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up"
+                style={{ animationDelay: '0.3s' }}
+              >
                 <button
-                  onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() =>
+                    document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })
+                  }
                   className="group relative px-8 py-4 bg-gradient-to-r from-violet-600 to-pink-600 rounded-2xl font-bold text-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(139,92,246,0.4)]"
                 >
                   <span className="relative z-10 flex items-center">
@@ -251,8 +268,6 @@ const App: React.FC = () => {
             </div>
           </section>
 
-
-
           {/* Features Section */}
           <section className="relative py-24 overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -262,13 +277,15 @@ const App: React.FC = () => {
                   <span className="text-sm text-violet-300">Powerful Features</span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                  Everything You Need to<br />
+                  Everything You Need to
+                  <br />
                   <span className="bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">
                     Dominate Social Media
                   </span>
                 </h2>
                 <p className="max-w-2xl mx-auto text-lg text-gray-400">
-                  Stop spending hours on content. Our AI analyzes viral trends and generates ready-to-use assets in seconds.
+                  Stop spending hours on content. Our AI analyzes viral trends and generates
+                  ready-to-use assets in seconds.
                 </p>
               </div>
 
@@ -279,15 +296,15 @@ const App: React.FC = () => {
                     className="group relative p-8 rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent border border-white/5 hover:border-violet-500/30 transition-all duration-500 hover:-translate-y-2"
                     style={{ animationDelay: `${idx * 0.1}s` }}
                   >
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center text-white mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                    <div
+                      className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center text-white mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}
+                    >
                       {feature.icon}
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3 group-hover:text-violet-300 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-400 leading-relaxed">
-                      {feature.description}
-                    </p>
+                    <p className="text-gray-400 leading-relaxed">{feature.description}</p>
                     <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
                   </div>
                 ))}
@@ -305,13 +322,15 @@ const App: React.FC = () => {
                   <span className="text-sm text-pink-300">Content Niches</span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                  Choose Your<br />
+                  Choose Your
+                  <br />
                   <span className="bg-gradient-to-r from-pink-400 to-violet-400 bg-clip-text text-transparent">
                     Content Niche
                   </span>
                 </h2>
                 <p className="max-w-2xl mx-auto text-lg text-gray-400">
-                  Each niche is fine-tuned with specialized AI prompts to generate the most engaging content for your audience.
+                  Each niche is fine-tuned with specialized AI prompts to generate the most engaging
+                  content for your audience.
                 </p>
               </div>
 
@@ -338,7 +357,8 @@ const App: React.FC = () => {
                   <span className="text-sm text-cyan-300">Simple Process</span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                  From Idea to Content<br />
+                  From Idea to Content
+                  <br />
                   <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
                     In 3 Easy Steps
                   </span>
@@ -347,9 +367,21 @@ const App: React.FC = () => {
 
               <div className="grid md:grid-cols-3 gap-8">
                 {[
-                  { step: "01", title: "Choose a Niche", desc: "Select from 8 specialized content categories tailored to your audience" },
-                  { step: "02", title: "Describe Your Idea", desc: "Tell our AI about your topic, style, and target audience preferences" },
-                  { step: "03", title: "Get Your Assets", desc: "Receive scripts, visual cues, hashtags, and ready-to-use content instantly" }
+                  {
+                    step: '01',
+                    title: 'Choose a Niche',
+                    desc: 'Select from 8 specialized content categories tailored to your audience',
+                  },
+                  {
+                    step: '02',
+                    title: 'Describe Your Idea',
+                    desc: 'Tell our AI about your topic, style, and target audience preferences',
+                  },
+                  {
+                    step: '03',
+                    title: 'Get Your Assets',
+                    desc: 'Receive scripts, visual cues, hashtags, and ready-to-use content instantly',
+                  },
                 ].map((item, idx) => (
                   <div key={item.step} className="relative group">
                     <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-violet-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
@@ -381,17 +413,23 @@ const App: React.FC = () => {
 
                 <div className="relative p-12 md:p-16 text-center">
                   <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                    Ready to Create Content<br />
+                    Ready to Create Content
+                    <br />
                     <span className="bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                       That Actually Performs?
                     </span>
                   </h2>
                   <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-                    Join thousands of creators using AI to generate viral-worthy content in seconds, not hours.
+                    Join thousands of creators using AI to generate viral-worthy content in seconds,
+                    not hours.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <button
-                      onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+                      onClick={() =>
+                        document
+                          .getElementById('categories')
+                          ?.scrollIntoView({ behavior: 'smooth' })
+                      }
                       className="group px-10 py-5 bg-white text-black rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all flex items-center hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
                     >
                       Get Started — It's Free
@@ -399,9 +437,15 @@ const App: React.FC = () => {
                     </button>
                   </div>
                   <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
-                    <div className="flex items-center"><Check className="w-4 h-4 text-green-400 mr-2" /> No credit card required</div>
-                    <div className="flex items-center"><Check className="w-4 h-4 text-green-400 mr-2" /> Unlimited generations</div>
-                    <div className="flex items-center"><Check className="w-4 h-4 text-green-400 mr-2" /> 8 content niches</div>
+                    <div className="flex items-center">
+                      <Check className="w-4 h-4 text-green-400 mr-2" /> No credit card required
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="w-4 h-4 text-green-400 mr-2" /> Unlimited generations
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="w-4 h-4 text-green-400 mr-2" /> 8 content niches
+                    </div>
                   </div>
                 </div>
               </div>
@@ -431,9 +475,7 @@ const App: React.FC = () => {
                     <Instagram className="w-5 h-5" />
                   </a>
                 </div>
-                <div className="text-sm text-gray-500">
-                  © 2025 Easy Edits. Built with AI.
-                </div>
+                <div className="text-sm text-gray-500">© 2025 Easy Edits. Built with AI.</div>
               </div>
             </div>
           </footer>
@@ -441,53 +483,24 @@ const App: React.FC = () => {
       )}
 
       {currentView === 'GENERATOR' && selectedCategory && (
-        <Generator
-          category={selectedCategory}
-          onBack={() => handleNavigate('HOME')}
-        />
+        <Generator category={selectedCategory} onBack={() => handleNavigate('HOME')} />
       )}
 
-      {currentView === 'PODCAST' && (
-        <PodcastPage
-          onBack={() => handleNavigate('HOME')}
-        />
-      )}
+      {currentView === 'PODCAST' && <PodcastPage onBack={() => handleNavigate('HOME')} />}
 
       {currentView === 'TEXT_HIGHLIGHTER' && (
-        <TextHighlighterPage
-          onBack={() => handleNavigate('HOME')}
-        />
+        <TextHighlighterPage onBack={() => handleNavigate('HOME')} />
       )}
 
-      {currentView === 'MUSIC' && (
-        <MusicPage
-          onBack={() => handleNavigate('HOME')}
-        />
-      )}
+      {currentView === 'MUSIC' && <MusicPage onBack={() => handleNavigate('HOME')} />}
 
-      {currentView === 'MOTIVATIONAL' && (
-        <MotivationalPage
-          onBack={() => handleNavigate('HOME')}
-        />
-      )}
+      {currentView === 'MOTIVATIONAL' && <MotivationalPage onBack={() => handleNavigate('HOME')} />}
 
-      {currentView === 'SPORTS' && (
-        <SportsPage
-          onBack={() => handleNavigate('HOME')}
-        />
-      )}
+      {currentView === 'SPORTS' && <SportsPage onBack={() => handleNavigate('HOME')} />}
 
-      {currentView === 'ENTERTAINMENT' && (
-        <MovieTVPage
-          onBack={() => handleNavigate('HOME')}
-        />
-      )}
+      {currentView === 'ENTERTAINMENT' && <MovieTVPage onBack={() => handleNavigate('HOME')} />}
 
-      {currentView === 'NEWS' && (
-        <NewsPage
-          onBack={() => handleNavigate('HOME')}
-        />
-      )}
+      {currentView === 'NEWS' && <NewsPage onBack={() => handleNavigate('HOME')} />}
     </div>
   );
 };
@@ -501,35 +514,58 @@ interface EnhancedCategoryCardProps {
 }
 
 const getCategoryIcon = (category: ContentCategory) => {
-  const iconClass = "w-7 h-7";
+  const iconClass = 'w-7 h-7';
   switch (category) {
-    case ContentCategory.PODCAST: return <Mic className={iconClass} />;
-    case ContentCategory.SPORTS: return <Trophy className={iconClass} />;
-    case ContentCategory.TECHNOLOGY: return <Zap className={iconClass} />;
-    case ContentCategory.ENTERTAINMENT: return <Video className={iconClass} />;
-    case ContentCategory.EDUCATIONAL: return <FileText className={iconClass} />;
-    case ContentCategory.MOTIVATIONAL: return <Sparkles className={iconClass} />;
-    case ContentCategory.MUSIC: return <Music className={iconClass} />;
-    case ContentCategory.NEWS: return <Newspaper className={iconClass} />;
-    default: return <Layers className={iconClass} />;
+    case ContentCategory.PODCAST:
+      return <Mic className={iconClass} />;
+    case ContentCategory.SPORTS:
+      return <Trophy className={iconClass} />;
+    case ContentCategory.TECHNOLOGY:
+      return <Zap className={iconClass} />;
+    case ContentCategory.ENTERTAINMENT:
+      return <Video className={iconClass} />;
+    case ContentCategory.EDUCATIONAL:
+      return <FileText className={iconClass} />;
+    case ContentCategory.MOTIVATIONAL:
+      return <Sparkles className={iconClass} />;
+    case ContentCategory.MUSIC:
+      return <Music className={iconClass} />;
+    case ContentCategory.NEWS:
+      return <Newspaper className={iconClass} />;
+    default:
+      return <Layers className={iconClass} />;
   }
 };
 
 const getCategoryGradient = (category: ContentCategory) => {
   switch (category) {
-    case ContentCategory.PODCAST: return "from-violet-500 to-purple-600";
-    case ContentCategory.SPORTS: return "from-orange-500 to-red-600";
-    case ContentCategory.TECHNOLOGY: return "from-cyan-500 to-blue-600";
-    case ContentCategory.ENTERTAINMENT: return "from-pink-500 to-rose-600";
-    case ContentCategory.EDUCATIONAL: return "from-emerald-500 to-teal-600";
-    case ContentCategory.MOTIVATIONAL: return "from-amber-500 to-orange-600";
-    case ContentCategory.MUSIC: return "from-fuchsia-500 to-pink-600";
-    case ContentCategory.NEWS: return "from-blue-500 to-indigo-600";
-    default: return "from-gray-500 to-gray-600";
+    case ContentCategory.PODCAST:
+      return 'from-violet-500 to-purple-600';
+    case ContentCategory.SPORTS:
+      return 'from-orange-500 to-red-600';
+    case ContentCategory.TECHNOLOGY:
+      return 'from-cyan-500 to-blue-600';
+    case ContentCategory.ENTERTAINMENT:
+      return 'from-pink-500 to-rose-600';
+    case ContentCategory.EDUCATIONAL:
+      return 'from-emerald-500 to-teal-600';
+    case ContentCategory.MOTIVATIONAL:
+      return 'from-amber-500 to-orange-600';
+    case ContentCategory.MUSIC:
+      return 'from-fuchsia-500 to-pink-600';
+    case ContentCategory.NEWS:
+      return 'from-blue-500 to-indigo-600';
+    default:
+      return 'from-gray-500 to-gray-600';
   }
 };
 
-const EnhancedCategoryCard: React.FC<EnhancedCategoryCardProps> = ({ category, onClick, details, index }) => {
+const EnhancedCategoryCard: React.FC<EnhancedCategoryCardProps> = ({
+  category,
+  onClick,
+  details,
+  index,
+}) => {
   return (
     <button
       onClick={() => onClick(category)}
@@ -537,14 +573,20 @@ const EnhancedCategoryCard: React.FC<EnhancedCategoryCardProps> = ({ category, o
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       {/* Gradient background on hover */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryGradient(category)} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${getCategoryGradient(category)} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
+      />
 
       {/* Decorative blur */}
-      <div className={`absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br ${getCategoryGradient(category)} rounded-full blur-[80px] opacity-0 group-hover:opacity-40 transition-opacity duration-500`} />
+      <div
+        className={`absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br ${getCategoryGradient(category)} rounded-full blur-[80px] opacity-0 group-hover:opacity-40 transition-opacity duration-500`}
+      />
 
       <div className="absolute inset-0 p-6 flex flex-col justify-between z-10">
         {/* Icon */}
-        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getCategoryGradient(category)} flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+        <div
+          className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getCategoryGradient(category)} flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}
+        >
           {getCategoryIcon(category)}
         </div>
 
@@ -553,9 +595,7 @@ const EnhancedCategoryCard: React.FC<EnhancedCategoryCardProps> = ({ category, o
           <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-violet-300 transition-colors">
             {category}
           </h3>
-          <p className="text-gray-400 text-sm mb-4">
-            {details.tagline}
-          </p>
+          <p className="text-gray-400 text-sm mb-4">{details.tagline}</p>
 
           {/* Feature pills */}
           <div className="flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">

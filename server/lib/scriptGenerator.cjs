@@ -71,7 +71,9 @@ function buildConceptImagePrompt(description) {
 }
 
 const toStringArray = (value) =>
-  Array.isArray(value) ? value.filter((v) => typeof v === 'string' && v.trim()).map((v) => v.trim()) : [];
+  Array.isArray(value)
+    ? value.filter((v) => typeof v === 'string' && v.trim()).map((v) => v.trim())
+    : [];
 
 /**
  * Parse the model's JSON text into a ScriptData object, throwing on bad shape.

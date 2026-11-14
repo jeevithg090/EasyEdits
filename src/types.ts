@@ -6,7 +6,7 @@ export enum ContentCategory {
   EDUCATIONAL = 'Educational',
   MOTIVATIONAL = 'Motivational',
   MUSIC = 'Music',
-  NEWS = 'News'
+  NEWS = 'News',
 }
 
 export interface ScriptData {
@@ -23,5 +23,13 @@ export interface GeneratedAsset {
   data: ScriptData | string; // ScriptData object or base64 image string
 }
 
-export type ViewState = 'HOME' | 'GENERATOR' | 'PODCAST' | 'TEXT_HIGHLIGHTER' | 'MUSIC' | 'MOTIVATIONAL' | 'SPORTS' | 'ENTERTAINMENT' | 'NEWS';
-
+export type ViewState =
+  | 'HOME'
+  | 'GENERATOR'
+  | 'PODCAST'
+  | 'TEXT_HIGHLIGHTER'
+  | 'MUSIC'
+  | 'MOTIVATIONAL'
+  | 'SPORTS'
+  | 'ENTERTAINMENT'
+  | 'NEWS';

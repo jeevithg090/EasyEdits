@@ -24,7 +24,13 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models
  * @param {string} deps.imageModel
  * @param {typeof fetch} [deps.fetchImpl]
  */
-function createGeneratorRouter({ getApiKey, rotateApiKey = () => {}, textModel, imageModel, fetchImpl = fetch }) {
+function createGeneratorRouter({
+  getApiKey,
+  rotateApiKey = () => {},
+  textModel,
+  imageModel,
+  fetchImpl = fetch,
+}) {
   const router = express.Router();
 
   async function callGemini(model, body) {
