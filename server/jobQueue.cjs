@@ -17,34 +17,34 @@ let db = null;
  *   server/firebase-service-account.json (git-ignored)
  */
 function loadServiceAccount() {
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-        return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-    }
-    const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
-        ? path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
-        : path.join(__dirname, 'firebase-service-account.json');
-    return require(serviceAccountPath);
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }
+  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+    ? path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+    : path.join(__dirname, 'firebase-service-account.json');
+  return require(serviceAccountPath);
 }
 
 function initializeFirebase() {
-    if (db) return db;
+  if (db) return db;
 
-    try {
-        const serviceAccount = loadServiceAccount();
+  try {
+    const serviceAccount = loadServiceAccount();
 
-        if (!getApps().length) {
-            initializeApp({
-                credential: cert(serviceAccount)
-            });
-        }
-
-        db = getFirestore();
-        console.log('✅ Firebase Firestore initialized');
-        return db;
-    } catch (error) {
-        console.error('❌ Failed to initialize Firebase:', error.message);
-        throw error;
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert(serviceAccount),
+      });
     }
+
+    db = getFirestore();
+    console.log('✅ Firebase Firestore initialized');
+    return db;
+  } catch (error) {
+    console.error('❌ Failed to initialize Firebase:', error.message);
+    throw error;
+  }
 }
 
 const JOBS_COLLECTION = 'jobs';
@@ -53,12 +53,12 @@ const JOBS_COLLECTION = 'jobs';
  * Job status constants
  */
 const JobStatus = {
-    PENDING: 'pending',
-    PROCESSING: 'processing',
-    COMPLETED: 'completed',
-    FAILED: 'failed',
-    CAPTION_PENDING: 'caption_pending',
-    TRANSCRIBING: 'transcribing',
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CAPTION_PENDING: 'caption_pending',
+  TRANSCRIBING: 'transcribing',
 };
 
 /**
@@ -68,26 +68,26 @@ const JobStatus = {
  * @returns {Promise<string>} - Job ID
  */
 async function createJob(jobData, initialStatus = JobStatus.PENDING) {
-    const db = initializeFirebase();
+  const db = initializeFirebase();
 
-    const jobRef = db.collection(JOBS_COLLECTION).doc();
-    const jobId = jobRef.id;
+  const jobRef = db.collection(JOBS_COLLECTION).doc();
+  const jobId = jobRef.id;
 
-    const jobDoc = {
-        id: jobId,
-        status: initialStatus,
-        outputVideoKey: null,
-        progress: 0,
-        error: null,
-        ...jobData,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-    };
+  const jobDoc = {
+    id: jobId,
+    status: initialStatus,
+    outputVideoKey: null,
+    progress: 0,
+    error: null,
+    ...jobData,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  };
 
-    await jobRef.set(jobDoc);
-    console.log(`📝 Created job: ${jobId} (status: ${initialStatus})`);
+  await jobRef.set(jobDoc);
+  console.log(`📝 Created job: ${jobId} (status: ${initialStatus})`);
 
-    return jobId;
+  return jobId;
 }
 
 /**
@@ -96,16 +96,16 @@ async function createJob(jobData, initialStatus = JobStatus.PENDING) {
  * @returns {Promise<Object|null>}
  */
 async function getJob(jobId) {
-    const db = initializeFirebase();
+  const db = initializeFirebase();
 
-    const jobRef = db.collection(JOBS_COLLECTION).doc(jobId);
-    const doc = await jobRef.get();
+  const jobRef = db.collection(JOBS_COLLECTION).doc(jobId);
+  const doc = await jobRef.get();
 
-    if (!doc.exists) {
-        return null;
-    }
+  if (!doc.exists) {
+    return null;
+  }
 
-    return doc.data();
+  return doc.data();
 }
 
 /**
@@ -114,15 +114,15 @@ async function getJob(jobId) {
  * @param {Object} updates
  */
 async function updateJob(jobId, updates) {
-    const db = initializeFirebase();
+  const db = initializeFirebase();
 
-    const jobRef = db.collection(JOBS_COLLECTION).doc(jobId);
-    await jobRef.update({
-        ...updates,
-        updatedAt: FieldValue.serverTimestamp(),
-    });
+  const jobRef = db.collection(JOBS_COLLECTION).doc(jobId);
+  await jobRef.update({
+    ...updates,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
 
-    console.log(`📝 Updated job ${jobId}:`, updates);
+  console.log(`📝 Updated job ${jobId}:`, updates);
 }
 
 /**
@@ -130,7 +130,7 @@ async function updateJob(jobId, updates) {
  * @param {string} jobId
  */
 async function markJobProcessing(jobId) {
-    await updateJob(jobId, { status: JobStatus.PROCESSING });
+  await updateJob(jobId, { status: JobStatus.PROCESSING });
 }
 
 /**
@@ -139,11 +139,11 @@ async function markJobProcessing(jobId) {
  * @param {string} outputVideoKey
  */
 async function markJobCompleted(jobId, outputVideoKey) {
-    await updateJob(jobId, {
-        status: JobStatus.COMPLETED,
-        outputVideoKey,
-        progress: 100,
-    });
+  await updateJob(jobId, {
+    status: JobStatus.COMPLETED,
+    outputVideoKey,
+    progress: 100,
+  });
 }
 
 /**
@@ -152,10 +152,10 @@ async function markJobCompleted(jobId, outputVideoKey) {
  * @param {string} error
  */
 async function markJobFailed(jobId, error) {
-    await updateJob(jobId, {
-        status: JobStatus.FAILED,
-        error,
-    });
+  await updateJob(jobId, {
+    status: JobStatus.FAILED,
+    error,
+  });
 }
 
 /**
@@ -164,7 +164,7 @@ async function markJobFailed(jobId, error) {
  * @param {number} progress - 0 to 100
  */
 async function updateJobProgress(jobId, progress) {
-    await updateJob(jobId, { progress });
+  await updateJob(jobId, { progress });
 }
 
 /**
@@ -173,15 +173,16 @@ async function updateJobProgress(jobId, progress) {
  * @returns {Promise<Array>}
  */
 async function getPendingJobs(limit = 10) {
-    const db = initializeFirebase();
+  const db = initializeFirebase();
 
-    const snapshot = await db.collection(JOBS_COLLECTION)
-        .where('status', '==', JobStatus.PENDING)
-        .orderBy('createdAt', 'asc')
-        .limit(limit)
-        .get();
+  const snapshot = await db
+    .collection(JOBS_COLLECTION)
+    .where('status', '==', JobStatus.PENDING)
+    .orderBy('createdAt', 'asc')
+    .limit(limit)
+    .get();
 
-    return snapshot.docs.map(doc => doc.data());
+  return snapshot.docs.map((doc) => doc.data());
 }
 
 /**
@@ -189,15 +190,15 @@ async function getPendingJobs(limit = 10) {
  * @returns {Promise<boolean>}
  */
 async function testConnection() {
-    try {
-        const db = initializeFirebase();
-        // Try to access the jobs collection
-        await db.collection(JOBS_COLLECTION).limit(1).get();
-        return true;
-    } catch (error) {
-        console.error('Firebase connection test failed:', error.message);
-        return false;
-    }
+  try {
+    const db = initializeFirebase();
+    // Try to access the jobs collection
+    await db.collection(JOBS_COLLECTION).limit(1).get();
+    return true;
+  } catch (error) {
+    console.error('Firebase connection test failed:', error.message);
+    return false;
+  }
 }
 
 /**
@@ -205,21 +206,21 @@ async function testConnection() {
  * @param {string} jobId
  */
 async function deleteJob(jobId) {
-    const db = initializeFirebase();
-    await db.collection(JOBS_COLLECTION).doc(jobId).delete();
+  const db = initializeFirebase();
+  await db.collection(JOBS_COLLECTION).doc(jobId).delete();
 }
 
 module.exports = {
-    initializeFirebase,
-    createJob,
-    getJob,
-    updateJob,
-    markJobProcessing,
-    markJobCompleted,
-    markJobFailed,
-    updateJobProgress,
-    getPendingJobs,
-    testConnection,
-    deleteJob,
-    JobStatus,
+  initializeFirebase,
+  createJob,
+  getJob,
+  updateJob,
+  markJobProcessing,
+  markJobCompleted,
+  markJobFailed,
+  updateJobProgress,
+  getPendingJobs,
+  testConnection,
+  deleteJob,
+  JobStatus,
 };

@@ -5,6 +5,7 @@ Date: 2026-02-03
 This document captures the immediate fixes and the near-term work to keep **easy-edits** stable and moving forward.
 
 ## Priority Fixes (Do First)
+
 1. **Remove hardcoded Gemini API keys from code**
    The Gemini API key pool is hardcoded in `server/server.cjs`, which is a security risk. Move keys to environment variables and rotate/revoke the exposed keys.
 2. **Remove service account keys from the repo**
@@ -13,6 +14,7 @@ This document captures the immediate fixes and the near-term work to keep **easy
    The `/api/music-video/ai-beat-detect` endpoint returns mock beat data. Implement real beat detection (e.g., FFmpeg audio analysis or `librosa`) and update the response accordingly.
 
 ## Next Steps (Build Roadmap)
+
 1. **Modularize the server**
    `server/server.cjs` is ~6,300 lines. Split routes into modules (e.g., `routes/`, `services/`, `lib/`) and add a simple dependency boundary.
 2. **Define a stable config system**
@@ -21,6 +23,7 @@ This document captures the immediate fixes and the near-term work to keep **easy
    Add smoke tests for critical endpoints (upload, export, transcription, AI calls) and a basic health check endpoint for deployments.
 
 ## Cleanup / Repo Hygiene
+
 1. **Avoid committing large/binary artifacts**
    Large video files and local artifacts are present in the repo root. Move to a `samples/` or `assets/` directory and update `.gitignore` if needed.
 2. **Exclude local virtual environments**
@@ -29,6 +32,7 @@ This document captures the immediate fixes and the near-term work to keep **easy
    Ensure the frontend reads required keys from `.env.local` only and no secrets are committed.
 
 ## Open Questions
+
 1. Which environment is the primary deployment target (local, VPS, serverless)?
 2. Should the AI features run locally, in Colab, or via hosted services by default?
 3. Which user workflows are highest priority (shorts, long-form, captions, B-roll, music)?
