@@ -6,46 +6,39 @@ Generates human-like, emotionally expressive audio for short-form content creati
 
 import argparse
 import json
-import sys
 import os
-import urllib.request
+import sys
 import urllib.error
+import urllib.request
 
 
 def call_openrouter(prompt: str, api_key: str) -> str:
     """Call OpenRouter API with the given prompt."""
     url = "https://openrouter.ai/api/v1/chat/completions"
-    
+
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
         "HTTP-Referer": "http://localhost:3001",
-        "X-Title": "Easy Edits Content Creator"
+        "X-Title": "Easy Edits Content Creator",
     }
-    
+
     data = {
         "model": "mistralai/mistral-7b-instruct:free",
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
+        "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 3000,
-        "temperature": 0.85
+        "temperature": 0.85,
     }
-    
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(data).encode('utf-8'),
-        headers=headers,
-        method='POST'
-    )
-    
+
+    req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers, method="POST")
+
     try:
         with urllib.request.urlopen(req, timeout=90) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            return result['choices'][0]['message']['content']
+            result = json.loads(response.read().decode("utf-8"))
+            return result["choices"][0]["message"]["content"]
     except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
-        raise Exception(f"OpenRouter API error: {e.code} - {error_body}")
+        error_body = e.read().decode("utf-8")
+        raise Exception(f"OpenRouter API error: {e.code} - {error_body}") from e
 
 
 def generate_script(topic: str, comment: str = None, api_key: str = None) -> dict:
@@ -55,7 +48,7 @@ def generate_script(topic: str, comment: str = None, api_key: str = None) -> dic
     """
     if not api_key:
         raise ValueError("OPENROUTER_API_KEY not provided")
-    
+
     iteration_context = ""
     if comment:
         iteration_context = f"""
@@ -168,42 +161,36 @@ IMPORTANT RULES:
 
     try:
         response_text = call_openrouter(prompt, api_key)
-        
+
         # Try to extract JSON from response
         text = response_text.strip()
         if "```json" in text:
             text = text.split("```json")[1].split("```")[0].strip()
         elif "```" in text:
             text = text.split("```")[1].split("```")[0].strip()
-        
+
         # Try to find JSON object in the text
-        start_idx = text.find('{')
-        end_idx = text.rfind('}')
+        start_idx = text.find("{")
+        end_idx = text.rfind("}")
         if start_idx != -1 and end_idx != -1:
-            text = text[start_idx:end_idx+1]
-        
+            text = text[start_idx : end_idx + 1]
+
         script_data = json.loads(text)
-        
-        return {
-            "success": True,
-            "script": script_data
-        }
-        
+
+        return {"success": True, "script": script_data}
+
     except json.JSONDecodeError as e:
         # If JSON parse fails, try to return raw text
         return {
             "success": True,
             "script": {
-                "plain_text": response_text if 'response_text' in dir() else "No response",
-                "parse_error": str(e)
+                "plain_text": response_text if "response_text" in dir() else "No response",
+                "parse_error": str(e),
             },
-            "warning": "Could not parse as structured JSON, returning raw text"
+            "warning": "Could not parse as structured JSON, returning raw text",
         }
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 def find_resources(topic: str, comment: str = None, api_key: str = None) -> dict:
@@ -212,7 +199,7 @@ def find_resources(topic: str, comment: str = None, api_key: str = None) -> dict
     """
     if not api_key:
         raise ValueError("OPENROUTER_API_KEY not provided")
-    
+
     iteration_context = ""
     if comment:
         iteration_context = f"""
@@ -252,73 +239,67 @@ Return ONLY the JSON object.
 
     try:
         response_text = call_openrouter(prompt, api_key)
-        
+
         text = response_text.strip()
         if "```json" in text:
             text = text.split("```json")[1].split("```")[0].strip()
         elif "```" in text:
             text = text.split("```")[1].split("```")[0].strip()
-        
-        start_idx = text.find('{')
-        end_idx = text.rfind('}')
+
+        start_idx = text.find("{")
+        end_idx = text.rfind("}")
         if start_idx != -1 and end_idx != -1:
-            text = text[start_idx:end_idx+1]
-        
+            text = text[start_idx : end_idx + 1]
+
         resources_data = json.loads(text)
-        
-        return {
-            "success": True,
-            "resources": resources_data
-        }
-        
+
+        return {"success": True, "resources": resources_data}
+
     except json.JSONDecodeError as e:
         return {
             "success": True,
             "resources": {
-                "raw_text": response_text if 'response_text' in dir() else "No response",
-                "parse_error": str(e)
+                "raw_text": response_text if "response_text" in dir() else "No response",
+                "parse_error": str(e),
             },
-            "warning": "Could not parse as structured JSON"
+            "warning": "Could not parse as structured JSON",
         }
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='AI Content Creator - Human-like SSML for Speechify TTS'
-    )
-    parser.add_argument('--action', required=True, choices=['script', 'resources'],
-                        help='Action to perform: script or resources')
-    parser.add_argument('--topic', required=True, help='Topic for content creation')
-    parser.add_argument('--comment', default=None, help='Feedback for iteration')
+    parser = argparse.ArgumentParser(description="AI Content Creator - Human-like SSML for Speechify TTS")
     parser.add_argument(
-        '--api_key',
-        default=os.environ.get('OPENROUTER_API_KEY'),
-        help='OpenRouter API key (defaults to the OPENROUTER_API_KEY environment variable)',
+        "--action", required=True, choices=["script", "resources"], help="Action to perform: script or resources"
+    )
+    parser.add_argument("--topic", required=True, help="Topic for content creation")
+    parser.add_argument("--comment", default=None, help="Feedback for iteration")
+    parser.add_argument(
+        "--api_key",
+        default=os.environ.get("OPENROUTER_API_KEY"),
+        help="OpenRouter API key (defaults to the OPENROUTER_API_KEY environment variable)",
     )
 
     args = parser.parse_args()
-    
+
     try:
-        if args.action == 'script':
+        if args.action == "script":
             result = generate_script(args.topic, args.comment, args.api_key)
-        elif args.action == 'resources':
+        elif args.action == "resources":
             result = find_resources(args.topic, args.comment, args.api_key)
         else:
             result = {"success": False, "error": f"Unknown action: {args.action}"}
-        
+
         print(json.dumps(result, indent=2))
-        
+
     except Exception as e:
         import traceback
+
         traceback.print_exc(file=sys.stderr)
         print(json.dumps({"success": False, "error": str(e)}))
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

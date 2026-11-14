@@ -80,13 +80,13 @@ from google.colab import userdata
 #   FIREBASE_CREDENTIALS  - the full Firebase service-account JSON
 #   R2_ENDPOINT           - https://<account-id>.r2.cloudflarestorage.com
 #   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME
-FIREBASE_CREDENTIALS = userdata.get('FIREBASE_CREDENTIALS')
+FIREBASE_CREDENTIALS = userdata.get("FIREBASE_CREDENTIALS")
 
 R2_CONFIG = {
-    "endpoint": userdata.get('R2_ENDPOINT'),
-    "access_key_id": userdata.get('R2_ACCESS_KEY_ID'),
-    "secret_access_key": userdata.get('R2_SECRET_ACCESS_KEY'),
-    "bucket_name": userdata.get('R2_BUCKET_NAME'),
+    "endpoint": userdata.get("R2_ENDPOINT"),
+    "access_key_id": userdata.get("R2_ACCESS_KEY_ID"),
+    "secret_access_key": userdata.get("R2_SECRET_ACCESS_KEY"),
+    "bucket_name": userdata.get("R2_BUCKET_NAME"),
 }
 
 # Parse Firebase credentials
@@ -116,17 +116,17 @@ print("✅ Firebase Firestore connected")
 
 # Initialize R2 (S3-compatible)
 r2_client = boto3.client(
-    's3',
-    endpoint_url=R2_CONFIG['endpoint'],
-    aws_access_key_id=R2_CONFIG['access_key_id'],
-    aws_secret_access_key=R2_CONFIG['secret_access_key'],
-    config=Config(signature_version='s3v4'),
-    region_name='auto'
+    "s3",
+    endpoint_url=R2_CONFIG["endpoint"],
+    aws_access_key_id=R2_CONFIG["access_key_id"],
+    aws_secret_access_key=R2_CONFIG["secret_access_key"],
+    config=Config(signature_version="s3v4"),
+    region_name="auto",
 )
 
 # Test R2 connection
 try:
-    r2_client.list_objects_v2(Bucket=R2_CONFIG['bucket_name'], MaxKeys=1)
+    r2_client.list_objects_v2(Bucket=R2_CONFIG["bucket_name"], MaxKeys=1)
     print("✅ Cloudflare R2 connected")
 except Exception as e:
     print(f"❌ R2 connection failed: {e}")
@@ -151,8 +151,9 @@ ASPECT_RATIO = 9 / 16
 SAMPLES_PER_SCENE = 5
 
 # Load YOLO model (will use GPU if available)
-model = YOLO('yolov8n.pt')
+model = YOLO("yolov8n.pt")
 print(f"✅ YOLO model loaded on: {model.device}")
+
 
 def analyze_scene_movement(video_path, start_frame, end_frame):
     """Analyze multiple frames in a scene to track person movement."""
@@ -178,6 +179,7 @@ def analyze_scene_movement(video_path, start_frame, end_frame):
     cap.release()
     return all_detected_boxes
 
+
 def detect_scenes(video_path):
     """Detect scene changes in video."""
     video_manager = VideoManager([video_path])
@@ -191,6 +193,7 @@ def detect_scenes(video_path):
     video_manager.release()
     return scene_list, fps
 
+
 def get_super_box(boxes):
     """Get bounding box that encloses all detections."""
     if not boxes:
@@ -201,19 +204,21 @@ def get_super_box(boxes):
     max_y = max(box[3] for box in boxes)
     return [min_x, min_y, max_x, max_y]
 
+
 def decide_cropping_strategy(all_boxes, frame_width, frame_height):
     """Decide whether to track or letterbox."""
     if not all_boxes:
-        return 'LETTERBOX', None
+        return "LETTERBOX", None
 
     super_box = get_super_box(all_boxes)
     sb_width = super_box[2] - super_box[0]
     max_allowed_width = frame_height * ASPECT_RATIO
 
     if sb_width > max_allowed_width:
-        return 'LETTERBOX', None
+        return "LETTERBOX", None
     else:
-        return 'TRACK', super_box
+        return "TRACK", super_box
+
 
 def calculate_crop_box(target_box, frame_width, frame_height):
     """Calculate crop coordinates centered on target."""
@@ -232,6 +237,7 @@ def calculate_crop_box(target_box, frame_width, frame_height):
         x1 = frame_width - crop_width
 
     return x1, 0, x2, frame_height
+
 
 def process_video(input_path, output_path, progress_callback=None):
     """Main autocrop processing function."""
@@ -256,32 +262,47 @@ def process_video(input_path, output_path, progress_callback=None):
     print("Step 2: Analyzing movement paths...")
     scenes_analysis = []
     for i, (start_time, end_time) in enumerate(tqdm(scenes, desc="Tracking")):
-        all_detections = analyze_scene_movement(
-            input_path,
-            start_time.get_frames(),
-            end_time.get_frames()
+        all_detections = analyze_scene_movement(input_path, start_time.get_frames(), end_time.get_frames())
+        strategy, super_box = decide_cropping_strategy(all_detections, original_width, original_height)
+        scenes_analysis.append(
+            {
+                "start_frame": start_time.get_frames(),
+                "end_frame": end_time.get_frames(),
+                "strategy": strategy,
+                "target_box": super_box,
+            }
         )
-        strategy, super_box = decide_cropping_strategy(
-            all_detections, original_width, original_height
-        )
-        scenes_analysis.append({
-            'start_frame': start_time.get_frames(),
-            'end_frame': end_time.get_frames(),
-            'strategy': strategy,
-            'target_box': super_box
-        })
 
     # Process video
     print("Step 3: Processing video...")
-    temp_video = output_path.replace('.mp4', '_temp_v.mp4')
-    temp_audio = output_path.replace('.mp4', '_temp_a.mka')
+    temp_video = output_path.replace(".mp4", "_temp_v.mp4")
+    temp_audio = output_path.replace(".mp4", "_temp_a.mka")
 
     command = [
-        'ffmpeg', '-y', '-f', 'rawvideo', '-vcodec', 'rawvideo',
-        '-s', f'{OUTPUT_WIDTH}x{OUTPUT_HEIGHT}', '-pix_fmt', 'bgr24',
-        '-r', str(fps), '-i', '-', '-c:v', 'libx264',
-        '-pix_fmt', 'yuv420p',  # Required for browser compatibility
-        '-preset', 'fast', '-crf', '18', '-an', temp_video
+        "ffmpeg",
+        "-y",
+        "-f",
+        "rawvideo",
+        "-vcodec",
+        "rawvideo",
+        "-s",
+        f"{OUTPUT_WIDTH}x{OUTPUT_HEIGHT}",
+        "-pix_fmt",
+        "bgr24",
+        "-r",
+        str(fps),
+        "-i",
+        "-",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",  # Required for browser compatibility
+        "-preset",
+        "fast",
+        "-crf",
+        "18",
+        "-an",
+        temp_video,
     ]
 
     ffmpeg_process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -294,16 +315,16 @@ def process_video(input_path, output_path, progress_callback=None):
         if not ret:
             break
 
-        if current_scene_idx < len(scenes_analysis) - 1 and \
-           f_idx >= scenes_analysis[current_scene_idx + 1]['start_frame']:
+        if (
+            current_scene_idx < len(scenes_analysis) - 1
+            and f_idx >= scenes_analysis[current_scene_idx + 1]["start_frame"]
+        ):
             current_scene_idx += 1
 
         scene_data = scenes_analysis[current_scene_idx]
 
-        if scene_data['strategy'] == 'TRACK':
-            x1, y1, x2, y2 = calculate_crop_box(
-                scene_data['target_box'], original_width, original_height
-            )
+        if scene_data["strategy"] == "TRACK":
+            x1, y1, x2, y2 = calculate_crop_box(scene_data["target_box"], original_width, original_height)
             output_frame = frame[y1:y2, x1:x2]
             if output_frame.shape[1] != OUTPUT_WIDTH:
                 output_frame = cv2.resize(output_frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
@@ -313,7 +334,7 @@ def process_video(input_path, output_path, progress_callback=None):
             scaled = cv2.resize(frame, (OUTPUT_WIDTH, nh))
             output_frame = np.zeros((OUTPUT_HEIGHT, OUTPUT_WIDTH, 3), dtype=np.uint8)
             y_off = (OUTPUT_HEIGHT - nh) // 2
-            output_frame[y_off:y_off+nh, :] = scaled
+            output_frame[y_off : y_off + nh, :] = scaled
 
         ffmpeg_process.stdin.write(output_frame.tobytes())
 
@@ -327,10 +348,10 @@ def process_video(input_path, output_path, progress_callback=None):
 
     # Add audio
     print("Step 4: Finalizing audio...")
-    subprocess.run(['ffmpeg', '-y', '-i', input_path, '-vn', '-acodec', 'copy', temp_audio],
-                   stderr=subprocess.PIPE)
-    subprocess.run(['ffmpeg', '-y', '-i', temp_video, '-i', temp_audio, '-c', 'copy', output_path],
-                   stderr=subprocess.PIPE)
+    subprocess.run(["ffmpeg", "-y", "-i", input_path, "-vn", "-acodec", "copy", temp_audio], stderr=subprocess.PIPE)
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", temp_video, "-i", temp_audio, "-c", "copy", output_path], stderr=subprocess.PIPE
+    )
 
     # Cleanup
     if os.path.exists(temp_video):
@@ -340,6 +361,7 @@ def process_video(input_path, output_path, progress_callback=None):
 
     print(f"✅ Done! Output: {output_path}")
     return output_path
+
 
 print("✅ AutoCrop functions loaded")
 ```
@@ -351,65 +373,63 @@ print("✅ AutoCrop functions loaded")
 ```python
 import time
 
+
 def download_from_r2(key, local_path):
     """Download file from R2 to local path."""
     print(f"⬇️ Downloading: {key}")
-    r2_client.download_file(R2_CONFIG['bucket_name'], key, local_path)
+    r2_client.download_file(R2_CONFIG["bucket_name"], key, local_path)
     print(f"✅ Downloaded to: {local_path}")
+
 
 def upload_to_r2(local_path, key):
     """Upload file from local path to R2."""
     print(f"⬆️ Uploading: {key}")
-    r2_client.upload_file(local_path, R2_CONFIG['bucket_name'], key)
+    r2_client.upload_file(local_path, R2_CONFIG["bucket_name"], key)
     print(f"✅ Uploaded to: {key}")
+
 
 def update_job_status(job_id, status, **kwargs):
     """Update job status in Firestore."""
-    update_data = {
-        'status': status,
-        'updatedAt': firestore.SERVER_TIMESTAMP,
-        **kwargs
-    }
-    db.collection('jobs').document(job_id).update(update_data)
+    update_data = {"status": status, "updatedAt": firestore.SERVER_TIMESTAMP, **kwargs}
+    db.collection("jobs").document(job_id).update(update_data)
     print(f"📝 Job {job_id[:8]}... status: {status}")
+
 
 def get_pending_jobs():
     """Get list of pending jobs from Firestore."""
     # Simple query - no orderBy to avoid needing a composite index
-    jobs = db.collection('jobs')\
-        .where(filter=firestore.FieldFilter('status', '==', 'pending'))\
-        .limit(5)\
-        .get()
+    jobs = db.collection("jobs").where(filter=firestore.FieldFilter("status", "==", "pending")).limit(5).get()
     return [job.to_dict() for job in jobs]
+
 
 def process_job(job):
     """Process a single job."""
-    job_id = job['id']
-    input_key = job['inputVideoKey']
-    aspect_ratio = job.get('aspectRatio', '9:16')
+    job_id = job["id"]
+    input_key = job["inputVideoKey"]
+    aspect_ratio = job.get("aspectRatio", "9:16")
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"🎬 Processing job: {job_id}")
     print(f"   Input: {input_key}")
     print(f"   Aspect Ratio: {aspect_ratio}")
-    print(f"{'='*50}\n")
+    print(f"{'=' * 50}\n")
 
     try:
         # Mark as processing
-        update_job_status(job_id, 'processing')
+        update_job_status(job_id, "processing")
 
         # Create temp directory
-        os.makedirs('/content/temp', exist_ok=True)
+        os.makedirs("/content/temp", exist_ok=True)
 
         # Download input
-        input_path = f'/content/temp/input_{job_id}.mp4'
+        input_path = f"/content/temp/input_{job_id}.mp4"
         download_from_r2(input_key, input_path)
 
         # Process
-        output_path = f'/content/temp/output_{job_id}.mp4'
+        output_path = f"/content/temp/output_{job_id}.mp4"
 
         def progress_callback(progress):
-            update_job_status(job_id, 'processing', progress=progress)
+            update_job_status(job_id, "processing", progress=progress)
 
         process_video(input_path, output_path, progress_callback)
 
@@ -418,9 +438,7 @@ def process_job(job):
         upload_to_r2(output_path, output_key)
 
         # Mark as completed
-        update_job_status(job_id, 'completed',
-                         outputVideoKey=output_key,
-                         progress=100)
+        update_job_status(job_id, "completed", outputVideoKey=output_key, progress=100)
 
         # Cleanup local files
         if os.path.exists(input_path):
@@ -433,8 +451,9 @@ def process_job(job):
 
     except Exception as e:
         print(f"❌ Job {job_id[:8]}... failed: {e}")
-        update_job_status(job_id, 'failed', error=str(e))
+        update_job_status(job_id, "failed", error=str(e))
         return False
+
 
 print("✅ Worker functions loaded")
 ```

@@ -1,0 +1,18 @@
+# Python dependencies for the helper scripts spawned by server/server.cjs.
+# Install into server/venv (the server prefers server/venv/bin/python when present):
+#   python3 -m venv server/venv && server/venv/bin/pip install -r server/requirements.txt
+
+# text_highlighter.py (OCR-based word highlighting)
+easyocr>=1.7
+opencv-python-headless>=4.8
+numpy>=1.24
+
+# Motivational voiceovers (spawned as `python3 -m edge_tts`)
+edge-tts>=6.1
+
+# extract_tweet_with_pfp.py (standalone utility, also needs the gallery-dl CLI)
+requests>=2.31
+
+# Optional: local transcription for the Music page (`python3 -c "import whisper"`).
+# Large download (PyTorch); uncomment if you want local Whisper instead of the Colab worker.
+# openai-whisper
