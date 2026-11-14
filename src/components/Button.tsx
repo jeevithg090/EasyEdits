@@ -28,9 +28,11 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type="button"
+      {...props}
       className={`${baseStyles} ${variants[variant]} ${className}`}
       disabled={isLoading || props.disabled}
-      {...props}
+      aria-busy={isLoading || undefined}
     >
       {isLoading ? (
         <svg
