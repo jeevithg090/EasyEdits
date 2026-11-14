@@ -7,14 +7,40 @@
     scroll-behavior: smooth;
   }
 
-  body {
-    background-color: #030014;
-    color: #f5f5f5;
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
   }
 
+  body {
+    background-color: theme('colors.surface.DEFAULT');
+    color: #f5f5f5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* One visible, high-contrast focus ring for every interactive element. */
   :focus-visible {
-    outline: 2px solid theme('colors.brand.400');
+    outline: 2px solid theme('colors.brand.300');
     outline-offset: 2px;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline-offset: 0;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  label[for] {
+    cursor: pointer;
+  }
+
+  ::placeholder {
+    color: theme('colors.gray.500');
+    opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -33,6 +59,11 @@
 }
 
 @layer components {
+  /* "All studios" link at the top of every studio page. */
+  .back-link {
+    @apply -ml-2 inline-flex min-h-[44px] items-center rounded-lg px-2 text-sm font-medium text-gray-400 transition-colors hover:text-white;
+  }
+
   .glass-card {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(10px);

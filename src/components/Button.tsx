@@ -15,11 +15,11 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center px-6 py-3 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex min-h-[44px] items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100';
 
   const variants = {
     primary:
-      'bg-gradient-to-r from-brand-500 to-brand-400 hover:from-brand-400 hover:to-brand-300 text-white shadow-lg shadow-brand-500/20',
+      'bg-gradient-to-r from-brand-600 to-pink-600 hover:from-brand-500 hover:to-pink-500 text-white shadow-lg shadow-brand-500/20',
     secondary: 'bg-white text-gray-900 hover:bg-gray-100',
     outline:
       'border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white bg-transparent',
@@ -37,6 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
       {isLoading ? (
         <svg
           className="animate-spin -ml-1 mr-3 h-5 w-5 text-current"
+          aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -56,7 +57,9 @@ export const Button: React.FC<ButtonProps> = ({
           ></path>
         </svg>
       ) : icon ? (
-        <span className="mr-2">{icon}</span>
+        <span className="mr-2" aria-hidden="true">
+          {icon}
+        </span>
       ) : null}
       {children}
     </button>
