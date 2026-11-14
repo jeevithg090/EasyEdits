@@ -11,6 +11,9 @@ This document tracks the remaining work to keep **Easy Edits** stable and moving
 - Config centralised in `server/lib/config.cjs` (port, CORS, body limit, model ids).
 - Test suite (Vitest + Supertest + Testing Library), linting (ESLint, Ruff), formatting
   (Prettier, Ruff) and CI.
+- UI/UX pass: design tokens, hash routing with a 404 page and per-page titles, lazy-loaded
+  studios, honest landing-page copy, responsive fixes at phone width, and zero axe WCAG A/AA
+  violations on every route.
 
 ## Priority fixes
 
