@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { API_BASE } from '../lib/api';
 import { ArrowLeft, Youtube, Clock, Download, Play, AlertCircle, Cloud, Monitor, Loader2, Crop, ChevronDown, Cpu, RefreshCw, CheckCircle2, XCircle, FolderOpen, Trash2, FileText, Type, Palette, Sparkles, X, Video, Link, Image, Wand2 } from 'lucide-react';
 
 interface ProcessedVideo {
@@ -32,14 +33,6 @@ interface CaptionSettings {
     wordsPerSegment: number;
     position: 'top' | 'center' | 'bottom' | 'custom';
     customPositionY: number;
-}
-
-interface ImagePrompt {
-    timeStart: number;
-    timeEnd: number;
-    context: string;
-    prompt: string;
-    imageIndex: number;
 }
 
 interface GeneratedImage {
@@ -170,7 +163,6 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
     const [isGeneratingImages, setIsGeneratingImages] = useState(false);
     const [isCreatingSplitVideo, setIsCreatingSplitVideo] = useState(false);
     const [imageGenProgress, setImageGenProgress] = useState(0);
-    const [imagePrompts, setImagePrompts] = useState<ImagePrompt[]>([]);
     const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
     const [transitionType, setTransitionType] = useState('fade');
     const [zoomEffect, setZoomEffect] = useState('ken_burns');
@@ -233,7 +225,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         }, 500);
 
         try {
-            const response = await fetch('http://localhost:3005/api/download', {
+            const response = await fetch(`${API_BASE}/api/download`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -254,7 +246,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
             const data = await response.json();
             setDownloadProgress(100);
-            setVideoPath(`http://localhost:3005/api/videos/${data.filename}`);
+            setVideoPath(`${API_BASE}/api/videos/file/${data.filename}`);
             setVideoFilename(data.filename);
         } catch (err) {
             clearInterval(progressInterval);
@@ -283,7 +275,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         }, 1000);
 
         try {
-            const response = await fetch('http://localhost:3005/api/autocrop', {
+            const response = await fetch(`${API_BASE}/api/autocrop`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -303,7 +295,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
             const data = await response.json();
             setAutocropProgress(100);
-            setCroppedVideoPath(`http://localhost:3005/api/videos/${data.filename}`);
+            setCroppedVideoPath(`${API_BASE}/api/videos/file/${data.filename}`);
         } catch (err) {
             clearInterval(progressInterval);
             setError(err instanceof Error ? err.message : 'An error occurred during autocrop');
@@ -313,11 +305,11 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
     };
 
     // Fetch transcription for completed job
-    const fetchTranscription = async () => {
+    const fetchTranscription = useCallback(async () => {
         if (!cloudJobId) return;
 
         try {
-            const response = await fetch(`http://localhost:3005/api/cloud/jobs/${cloudJobId}/transcription`);
+            const response = await fetch(`${API_BASE}/api/cloud/jobs/${cloudJobId}/transcription`);
             if (response.ok) {
                 const data = await response.json();
                 setTranscription(data.transcription);
@@ -325,14 +317,14 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         } catch (err) {
             console.error('Failed to fetch transcription:', err);
         }
-    };
+    }, [cloudJobId]);
 
     // Check cloud availability on mount
     useEffect(() => {
         const checkCloudAvailability = async () => {
             setIsCheckingCloud(true);
             try {
-                const response = await fetch('http://localhost:3005/api/cloud/status');
+                const response = await fetch(`${API_BASE}/api/cloud/status`);
                 const data = await response.json();
                 setIsCloudAvailable(data.available === true);
             } catch {
@@ -347,7 +339,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
     // Fetch processed videos
     const fetchProcessedVideos = async () => {
         try {
-            const response = await fetch('http://localhost:3005/api/videos');
+            const response = await fetch(`${API_BASE}/api/videos`);
             const videos = await response.json();
             // Filter to only show cropped videos
             const cropped = videos.filter((v: ProcessedVideo) => v.filename.startsWith('cropped_'));
@@ -370,7 +362,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
         const pollInterval = setInterval(async () => {
             try {
-                const response = await fetch(`http://localhost:3005/api/cloud/jobs/${cloudJobId}`);
+                const response = await fetch(`${API_BASE}/api/cloud/jobs/${cloudJobId}`);
                 const job = await response.json();
 
                 setCloudJobStatus(job.status);
@@ -395,7 +387,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         }, 3000); // Poll every 3 seconds
 
         return () => clearInterval(pollInterval);
-    }, [cloudJobId, cloudJobStatus]);
+    }, [cloudJobId, cloudJobStatus, fetchTranscription]);
 
     // Poll for caption job status
     useEffect(() => {
@@ -405,7 +397,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
         const pollInterval = setInterval(async () => {
             try {
-                const response = await fetch(`http://localhost:3005/api/cloud/jobs/${captionJobId}`);
+                const response = await fetch(`${API_BASE}/api/cloud/jobs/${captionJobId}`);
                 const job = await response.json();
 
                 setCaptionJobStatus(job.status);
@@ -473,7 +465,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         }, 500);
 
         try {
-            const response = await fetch('http://localhost:3005/api/cloud/upload', {
+            const response = await fetch(`${API_BASE}/api/cloud/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -520,7 +512,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         setCaptionedVideoPath(null);
 
         try {
-            const response = await fetch(`http://localhost:3005/api/cloud/jobs/${cloudJobId}/generate-captions`, {
+            const response = await fetch(`${API_BASE}/api/cloud/jobs/${cloudJobId}/generate-captions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -556,7 +548,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
         setContentCroppedVideoPath(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/content-crop', {
+            const response = await fetch(`${API_BASE}/api/content-crop`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -572,7 +564,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             }
 
             const data = await response.json();
-            setContentCroppedVideoPath(`http://localhost:3005${data.videoPath}`);
+            setContentCroppedVideoPath(`${API_BASE}${data.videoPath}`);
             setShowContentResources(false);
 
         } catch (err) {
@@ -594,13 +586,13 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
 
         if (captionedVideoPath) {
             // Extract filename from captioned video URL
-            const url = new URL(captionedVideoPath, 'http://localhost:3005');
+            const url = new URL(captionedVideoPath, API_BASE);
             targetVideoFilename = url.pathname.split('/').pop() || null;
             console.log('Using captioned video:', targetVideoFilename);
         } else if (croppedVideoPath) {
             // Extract filename from cropped video URL (could be local or cloud)
             try {
-                const url = new URL(croppedVideoPath, 'http://localhost:3005');
+                const url = new URL(croppedVideoPath, API_BASE);
                 targetVideoFilename = url.pathname.split('/').pop() || null;
             } catch {
                 // If URL parsing fails, try simple split
@@ -627,7 +619,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             setIsGeneratingImagePrompts(true);
             setImageGenProgress(10);
 
-            const promptsResponse = await fetch('http://localhost:3005/api/generate-image-prompts', {
+            const promptsResponse = await fetch(`${API_BASE}/api/generate-image-prompts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -642,14 +634,13 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             }
 
             const promptsData = await promptsResponse.json();
-            setImagePrompts(promptsData.imagePrompts);
             setIsGeneratingImagePrompts(false);
             setImageGenProgress(30);
 
             // Step 2: Generate AI images from prompts
             setIsGeneratingImages(true);
 
-            const imagesResponse = await fetch('http://localhost:3005/api/generate-ai-images', {
+            const imagesResponse = await fetch(`${API_BASE}/api/generate-ai-images`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ imagePrompts: promptsData.imagePrompts }),
@@ -669,13 +660,13 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             setIsCreatingSplitVideo(true);
 
             // Determine the source video URL to use
-            let sourceVideoUrl = captionedVideoPath || croppedVideoPath || null;
+            const sourceVideoUrl = captionedVideoPath || croppedVideoPath || null;
             let videoFilenameToUse = targetVideoFilename;
 
             // If the video is from cloud (URL), download it first
             if (sourceVideoUrl && sourceVideoUrl.startsWith('http')) {
                 console.log('Downloading cloud video for processing...');
-                const downloadResponse = await fetch('http://localhost:3005/api/download-cloud-video', {
+                const downloadResponse = await fetch(`${API_BASE}/api/download-cloud-video`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ videoUrl: sourceVideoUrl }),
@@ -691,7 +682,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                 console.log('Cloud video downloaded:', videoFilenameToUse);
             }
 
-            const splitResponse = await fetch('http://localhost:3005/api/create-split-video', {
+            const splitResponse = await fetch(`${API_BASE}/api/create-split-video`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -708,7 +699,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
             }
 
             const splitData = await splitResponse.json();
-            setSplitVideoPath(`http://localhost:3005${splitData.videoPath}`);
+            setSplitVideoPath(`${API_BASE}${splitData.videoPath}`);
             setImageGenProgress(100);
 
         } catch (err) {
@@ -1825,7 +1816,7 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                                 <div key={video.filename} className="glass-card rounded-xl overflow-hidden group">
                                     <div className="aspect-[9/16] bg-black/60 relative">
                                         <video
-                                            src={`http://localhost:3005${video.path}`}
+                                            src={`${API_BASE}${video.path}`}
                                             className="w-full h-full object-contain"
                                             muted
                                             onMouseEnter={(e) => e.currentTarget.play()}
@@ -1833,14 +1824,14 @@ export const PodcastPage: React.FC<PodcastPageProps> = ({ onBack }) => {
                                         />
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                             <button
-                                                onClick={() => setCroppedVideoPath(`http://localhost:3005${video.path}`)}
+                                                onClick={() => setCroppedVideoPath(`${API_BASE}${video.path}`)}
                                                 className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
                                                 title="View"
                                             >
                                                 <Play className="w-5 h-5 text-white" />
                                             </button>
                                             <a
-                                                href={`http://localhost:3005${video.path}`}
+                                                href={`${API_BASE}${video.path}`}
                                                 download
                                                 className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
                                                 title="Download"

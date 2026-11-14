@@ -1,30 +1,29 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { API_BASE } from '../lib/api';
 import { Button } from './Button';
 import {
-    Upload,
-    X,
-    Sparkles,
-    Download,
-    AlertCircle,
-    Image as ImageIcon,
-    Highlighter,
-    Palette,
-    Clock,
-    Wand2,
-    RefreshCw,
-    Video,
-    FileText,
-    MessageSquare,
-    ExternalLink,
-    Copy,
-    Check,
-    Mic,
-    Volume2,
-    Play,
-    Pause,
-    Film,
-    Search,
-    Grid3X3
+  Upload,
+  X,
+  Sparkles,
+  Download,
+  AlertCircle,
+  Image as ImageIcon,
+  Highlighter,
+  Palette,
+  Clock,
+  Wand2,
+  RefreshCw,
+  Video,
+  FileText,
+  MessageSquare,
+  ExternalLink,
+  Copy,
+  Check,
+  Mic,
+  Volume2,
+  Film,
+  Search,
+  Grid3X3,
 } from 'lucide-react';
 
 interface UploadedImage {
@@ -111,7 +110,6 @@ interface BRollItem {
     source_url: string;
 }
 
-const API_BASE = 'http://localhost:3005';
 
 const SPEED_OPTIONS = [
     { key: 'slow', name: 'Slow', description: 'Natural pace' },
@@ -301,7 +299,7 @@ export const TextHighlighterPage: React.FC<TextHighlighterPageProps> = ({ onBack
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        } catch (err) {
+        } catch {
             setError('Failed to download video');
         }
     };

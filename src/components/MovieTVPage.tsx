@@ -1,9 +1,27 @@
 import React, { useState, useRef } from 'react';
+import { API_BASE } from '../lib/api';
 import {
-    ArrowLeft, Film, Clapperboard, Tv, Sparkles, Link, Download, Play, Pause,
-    Loader2, CheckCircle2, XCircle, Volume2, Music, Zap, Filter, Wand2,
-    MessageCircle, Send, Clock, ExternalLink, Search, Type, Camera, Sun,
-    Plus, Trash2
+  ArrowLeft,
+  Film,
+  Clapperboard,
+  Tv,
+  Sparkles,
+  Link,
+  Download,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Music,
+  Zap,
+  Filter,
+  Wand2,
+  MessageCircle,
+  Clock,
+  ExternalLink,
+  Search,
+  Type,
+  Camera,
+  Sun,
 } from 'lucide-react';
 import { TimelineEditor, TimelineItem } from './TimelineEditor';
 
@@ -195,8 +213,8 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
             // Fan edits uses simple download (no autocrop needed)
             // Other features may use content-crop
             const endpoint = activeFeature === 'fan_edit'
-                ? 'http://localhost:3005/api/fan-edit/download'
-                : 'http://localhost:3005/api/fan-edit/download'; // Using simple download for all Movie/TV features
+                ? `${API_BASE}/api/fan-edit/download`
+                : `${API_BASE}/api/fan-edit/download`; // Using simple download for all Movie/TV features
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -210,7 +228,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
             }
 
             const data = await response.json();
-            setVideoPath(`http://localhost:3005${data.videoPath}`);
+            setVideoPath(`${API_BASE}${data.videoPath}`);
             setVideoFilename(data.filename);
 
         } catch (err) {
@@ -229,7 +247,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
         setAiSuggestions([]);
 
         try {
-            const response = await fetch('http://localhost:3005/api/sports/ai-suggest-music', {
+            const response = await fetch(`${API_BASE}/api/sports/ai-suggest-music`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ videoFilename }),
@@ -304,7 +322,12 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
         // If no timeline items, fallback to selectedFilter (global)
         // But the user asked for "slider", so we prioritize the timeline.
 
-        const payload: any = {
+        const payload: {
+            videoFilename: string | null;
+            timeline?: typeof timelineItems;
+            filter?: string;
+            intensity?: number;
+        } = {
             videoFilename,
         };
 
@@ -323,7 +346,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
         setFinalVideoPath(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/music-video/apply-filter', {
+            const response = await fetch(`${API_BASE}/api/music-video/apply-filter`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -335,7 +358,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
             }
 
             const data = await response.json();
-            setFinalVideoPath(`http://localhost:3005${data.videoPath}`);
+            setFinalVideoPath(`${API_BASE}${data.videoPath}`);
 
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Filter processing failed');
@@ -375,7 +398,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
         setSelectedScene(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/entertainment/suggest-scenes', {
+            const response = await fetch(`${API_BASE}/api/entertainment/suggest-scenes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -419,7 +442,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
         setMemeVideoPath(null);
 
         try {
-            const response = await fetch('http://localhost:3005/api/entertainment/generate-text-overlay', {
+            const response = await fetch(`${API_BASE}/api/entertainment/generate-text-overlay`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -435,7 +458,7 @@ export const MovieTVPage: React.FC<MovieTVPageProps> = ({ onBack }) => {
 
             const data = await response.json();
             setOverlayText(data.overlayText);
-            setMemeVideoPath(`http://localhost:3005${data.videoPath}`);
+            setMemeVideoPath(`${API_BASE}${data.videoPath}`);
 
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to generate text overlay');

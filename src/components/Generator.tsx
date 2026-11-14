@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ContentCategory, ScriptData } from '../types';
-import { generateVideoScript, generateConceptImage } from '../services/geminiService';
+import { generateVideoScript, generateConceptImage } from '../services/generatorApi';
+import { getErrorMessage } from '../lib/api';
 import { Button } from './Button';
-import { Sparkles, Copy, RefreshCw, ImageIcon, FileText, Download } from 'lucide-react';
+import { Sparkles, Copy, RefreshCw, ImageIcon, FileText, Download, AlertCircle } from 'lucide-react';
 
 interface GeneratorProps {
   category: ContentCategory;
@@ -17,17 +18,19 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'script' | 'visuals'>('script');
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
-    if (!topic) return;
+    if (!topic.trim()) return;
+    setError(null);
     setIsGenerating(true);
     setScriptData(null);
     setGeneratedImage(null);
     try {
       const data = await generateVideoScript(category, topic, tone);
       setScriptData(data);
-    } catch (e) {
-      alert("Failed to generate script. Please try again.");
+    } catch (error) {
+      setError(getErrorMessage(error, 'Failed to generate script. Please try again.'));
     } finally {
       setIsGenerating(false);
     }
@@ -35,12 +38,13 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
 
   const handleGenerateImage = async () => {
     if (!scriptData) return;
+    setError(null);
     setIsImageGenerating(true);
     try {
       const image = await generateConceptImage(`${scriptData.title} - ${scriptData.visual_cues[0]}`);
       setGeneratedImage(image);
-    } catch (e) {
-      alert("Failed to generate image.");
+    } catch (error) {
+      setError(getErrorMessage(error, 'Failed to generate image.'));
     } finally {
       setIsImageGenerating(false);
     }
@@ -71,10 +75,12 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
         {/* Input Section */}
         <div className="lg:col-span-4 space-y-6">
           <div className="glass-card p-6 rounded-2xl">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="generator-topic" className="block text-sm font-medium text-gray-300 mb-2">
               What's your video about?
             </label>
             <textarea
+              id="generator-topic"
+              maxLength={500}
               className="w-full bg-black/40 border border-gray-700 rounded-xl p-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all resize-none h-32"
               placeholder={`e.g., Top 5 tools for ${category.toLowerCase()}...`}
               value={topic}
@@ -84,10 +90,12 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
             <label className="block text-sm font-medium text-gray-300 mt-6 mb-2">
               Select Tone
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Tone">
               {tones.map(t => (
                 <button
                   key={t}
+                  type="button"
+                  aria-pressed={tone === t}
                   onClick={() => setTone(t)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     tone === t 
@@ -104,11 +112,21 @@ export const Generator: React.FC<GeneratorProps> = ({ category, onBack }) => {
               className="w-full mt-8" 
               onClick={handleGenerate} 
               isLoading={isGenerating}
-              disabled={!topic}
+              disabled={!topic.trim()}
               icon={<Sparkles className="w-5 h-5" />}
             >
               Generate Magic
             </Button>
+
+            {error && (
+              <div
+                role="alert"
+                className="mt-4 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            )}
           </div>
 
           {/* Tips Card */}

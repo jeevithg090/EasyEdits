@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export interface TimelineItem {
     id: string;
@@ -9,11 +9,17 @@ export interface TimelineItem {
     end: number;   // in seconds
 }
 
+export interface TimelinePreset {
+    key: string;
+    name: string;
+    previewGradient?: string;
+}
+
 interface TimelineEditorProps {
     duration: number; // in seconds
     currentTime: number;
     items: TimelineItem[];
-    presets: any[];
+    presets: TimelinePreset[];
     onUpdateItems: (items: TimelineItem[]) => void;
     onSeek: (time: number) => void;
 }
