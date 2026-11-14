@@ -295,8 +295,12 @@ def main():
                         help='Action to perform: script or resources')
     parser.add_argument('--topic', required=True, help='Topic for content creation')
     parser.add_argument('--comment', default=None, help='Feedback for iteration')
-    parser.add_argument('--api_key', required=True, help='OpenRouter API key')
-    
+    parser.add_argument(
+        '--api_key',
+        default=os.environ.get('OPENROUTER_API_KEY'),
+        help='OpenRouter API key (defaults to the OPENROUTER_API_KEY environment variable)',
+    )
+
     args = parser.parse_args()
     
     try:
